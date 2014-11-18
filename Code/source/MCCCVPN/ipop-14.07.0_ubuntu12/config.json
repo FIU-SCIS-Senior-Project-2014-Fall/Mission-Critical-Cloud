@@ -1,0 +1,10 @@
+{
+    "xmpp_username": "username@gmail.com",
+    "xmpp_host": "talk.google.com",
+    "xmpp_password": "enter-password-here",
+    "ip4": "172.31.0.100",
+    "ip4_mask": 24,
+    "controller_logging": "INFO",
+    "tincan_logging": 0
+}
+

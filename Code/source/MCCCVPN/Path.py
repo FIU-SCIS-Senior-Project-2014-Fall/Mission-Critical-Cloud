@@ -10,6 +10,8 @@ import subprocess
 import uuid
 import MC3Exceptions
 import VirtualMachine
+from graph_tool.all import *
+
 
 class Path():
 
@@ -48,5 +50,9 @@ class Path():
 		try:
 			self.length = length
 		except TypeError:
+	
+	def calc_length(self):
+		
+	def calc_delay(self):
 	
 	

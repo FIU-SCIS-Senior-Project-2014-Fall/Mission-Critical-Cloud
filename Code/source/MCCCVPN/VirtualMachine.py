@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 from __future__ import print_function
 from pprint import pprint
@@ -14,7 +13,6 @@ class VirtualMachine():
 	
 	def __init__(self, ipAdd, vpnIp, user, password, host, group):
         self.vmId = uuid.uuid4()
-		
 		self.ipAddress = ipAdd
 		self.vpnIp = vpnIp
 		self.xmppUserName = user
@@ -50,5 +48,7 @@ class VirtualMachine():
 		
 		
 def valid_ip():
-	if 1==1 return True | False 
+	if 1==1 return True; return False 
+	
+
 	

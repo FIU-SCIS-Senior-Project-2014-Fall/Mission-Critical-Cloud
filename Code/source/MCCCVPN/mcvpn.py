@@ -1,4 +1,7 @@
-
+'''
+This file starts the tincan and mccvpn_controlller on the vm
+as daemons
+'''
 
 #!/usr/bin/env python
 

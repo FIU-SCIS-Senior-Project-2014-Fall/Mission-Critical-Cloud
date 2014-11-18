@@ -1,10 +1,24 @@
 {
-    "xmpp_username": "username@gmail.com",
-    "xmpp_host": "talk.google.com",
-    "xmpp_password": "enter-password-here",
-    "ip4": "172.31.0.100",
+    "xmpp_username": xmpp_username+"@ejabberd",
+    "xmpp_password": "password",
+    "xmpp_host": "131.94.128.12",
+    "ip4": "192.168.5.7",
     "ip4_mask": 24,
-    "controller_logging": "INFO",
-    "tincan_logging": 2
+    "tincan_logging": 1,
+    "uid_size": 40,
+    "sec": "True",
+    "multihop": "True",
+    "wait_time": 5,
+    "stun": ["131.94.128.12:3478"],
+    "buf_size": 4096,
+    "router_mode": "False",
+    "traffic_window_size": 5,
+    "multihop_cl": 100,
+    "multihop_ihc": 3,
+    "multihop_hl": 10,
+    "multihop_tl": 1,
+    "multihop_sr": "True",
+	"max_latency":5, #in milliseconds
+	"min_latency":2,
+	"path_random_interval": 30 #in seconds
 }
-
