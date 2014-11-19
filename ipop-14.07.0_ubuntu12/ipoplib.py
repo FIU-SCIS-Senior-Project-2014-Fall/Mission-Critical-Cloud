@@ -59,6 +59,8 @@ CONFIG = {
     "multihop_sr": True # Multihop source route
 }
 
+print CONFIG['xmpp_username']
+
 IP_MAP = {}
 
 ipop_ver = "\x02"
