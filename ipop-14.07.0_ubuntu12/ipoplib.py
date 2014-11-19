@@ -18,6 +18,7 @@ import socket
 
 xmpp_username = socket.gethostname()
 
+print xmpp_username
 # Set default config values
 CONFIG = {
     "xmpp_username": xmpp_username+"@ejabberd",
