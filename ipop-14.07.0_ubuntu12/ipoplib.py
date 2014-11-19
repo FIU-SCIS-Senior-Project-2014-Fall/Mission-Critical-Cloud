@@ -20,6 +20,8 @@ xmpp_username = socket.gethostname()
 
 # Set default config values
 CONFIG = {
+    "xmpp_username": xmpp_username+"@ejabberd",
+    "xmpp_password": "password",
     "stun": ["131.94.128.12:3478"],
     #"stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
     #         "stun2.l.google.com:19302", "stun3.l.google.com:19302",
