@@ -1,6 +1,111 @@
 #!/usr/bin/env python
 
 from ipoplib import *
+from graph_tool.all import *
+import socket
+
+xmpp_username = socket.gethostname()
+
+IP_MAP = {}
+
+#the allowed connections table / forwarding table for this node
+con_table = {	
+	"Jules":"ip_of_jules", 
+	"Claire":"ip_of_Claire"
+}
+
+con_graph = Graph()
+v_name = con_graph.new_vertex_property("string")
+v_ip = con_graph.new_vertex_property("string")
+edge_latency = con_graph.new_edge_property("double")
+
+
+def build_connection_graph(self):
+	#add vertices for all keys in con_table
+	con_graph.add_vertex(len(con_table))
+	#this node is always the 0th vertex.
+	me = con_graph.vertex(0)
+	
+	v_name[me] = system.get_hostname()
+	v_ip[me] = system.my_ip()
+	
+	for v in con_graph.vertices():
+		for key, ip in con_table:
+			#add an edge between myself and all nodes on my list.
+			e = con_graph.add_edge(me, v)
+			#and the reverse
+			#e1 = con_graph.add_edge(v, me)
+			#attach the name in con_table to this vertex
+			v_name[v] = key
+			#attach the ip of the vertex to this vertex
+			v_ip[v] = ip
+			#initialize edge_latency to 0.0
+			edge_latency[e] = 0.0
+
+
+def gen_new_path(self):
+	#get some info from a future traffic function
+	latency = calc_latency()
+	
+	#use this info to ensure the path is within the bounds
+	
+	#identify the latency bound from CONFIG 
+	#i.e. CONFIG['min_latency'] CONFIG['max_latency']
+	if is_double(CONFING['min_latency']) and is_integer(CONFIG['max_latency']):
+		if CONFIG['min_latency'] > CONFIG['max_latency']:#error perhaps swap max and min values
+			max_latency = CONFIG['min_latency']
+			min_latency = CONFIG['max_latency']
+		else:
+			max_latency = CONFIG['max_latency']
+			min_latency = CONFIG['min_latency']
+	#else:
+		#Raise error
+	
+	#find paths between max and min latency
+	paths = find_paths(max_latency, min_latency)
+	
+	#choose a random path from the paths set and return it
+	return pick_path(paths)
+	
+			
+
+def find_paths(self, **params):
+#Generates a set of suitable paths from the source (this vm) to the destination vm
+#Returns the set
+
+	paths = {}
+	
+	#compute total latency(edge_latency_0 + edge_latency_1 + ... + edge_latency_n)to destination
+	#for each edge e on the path to the source:
+		#total_latency += edge_latency[e]
+		#if total_latency < min_latency || total_latency > max_latency:
+			#go to next calculation.
+		#insert total_latency into result data structure i.e. paths
+		#paths.add(total_latency)
+	return paths
+		
+		
+def pick_path(self, paths):
+#Returns random path from set of acceptable paths
+	return paths[random.int(0, len(paths))]
+
+	
+	
+def calc_latency(self):
+#Calculated the latencies of the edges between the paths by observing network traffic
+#updates graph edge details in con_graph
+
+	#for each edge of con_graph
+	for e in edge_latency:
+		#compute edge latency value
+		#attach latency value to edge
+		continue
+
+
+#def set_links(path):
+	#iterate over path
+	#create links at each hop on the path
+	#delete 
 
 class SvpnUdpServer(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
@@ -41,11 +146,45 @@ class SvpnUdpServer(UdpServer):
                     connection_count += 1
                     if connection_count > CONFIG["multihop_cl"]:
                         do_trim_link(self.sock, k)
-        
+    
+    def calculate_window_traffic(self, window_size):
+        peer_window_traffic = []
+        #if no peers
+        if len(self.peers) == 0:
+            return []
+            
+        #for each peer in peers
+        for uid, attrs in self.peers.iteritems():
+            #if the peer is offline 
+            if attrs['status'] == 'offline':
+                continue
+            traffic = attrs['traffic']
+            #index (is the smaller of window size or len(traffic) ) - 1
+            index = min(window_size, len(traffic)) - 1 
+            bytes_in_window = traffic[0] - traffic[index]
+			
+            #Tuples in the peer_window_traffic list are 'reversed' for efficiency..
+            peer_window_traffic.append((bytes_in_window, uid))
+        return peer_window_traffic
+
+    def calculate_window_size(self):
+        target_volume = 1048576 # 1 MB
+        size = CONFIG['traffic_window_size']
+        #for each peer in peers
+        for uid, attrs in self.peers.iteritems():
+            #if peer is offline
+            if attrs['status'] == 'offline':
+                continue
+            traffic = attrs['traffic']
+            hist_length = len(traffic) 
+            while hist_length > size and (traffic[0] - traffic[size]) < target_volume:
+                size += 1
+            return size
 
     def serve(self):
         socks, _, _ = select.select(self.sock_list, [], [], CONFIG["wait_time"])
         for sock in socks:
+            print self.peers
             if sock == self.sock or sock == self.sock_svr:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 #---------------------------------------------------------------

@@ -6,12 +6,13 @@ class SvpnUdpServer(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
         UdpServer.__init__(self, user, password, host, ip4)
         self.uid = uid
+        print self.uid
         self.peerlist = set()
         self.ip_map = dict(IP_MAP)
         do_set_logging(self.sock, CONFIG["tincan_logging"])
         do_set_translation(self.sock, 1)
         do_set_cb_endpoint(self.sock, self.sock.getsockname())
-        do_set_local_ip(self.sock, uid, ip4, gen_ip6(uid), CONFIG["ip4_mask"],
+        do_set_local_ip(self.sock, uid, ip4, gen_ip6(self.uid), CONFIG["ip4_mask"],
                         CONFIG["ip6_mask"], CONFIG["subnet_mask"])
         do_register_service(self.sock, user, password, host)
         do_set_trimpolicy(self.sock, CONFIG["trim_enabled"])
@@ -48,6 +49,7 @@ class SvpnUdpServer(UdpServer):
         for sock in socks:
             if sock == self.sock or sock == self.sock_svr:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
+                logging.debug("data is %s" % data)
                 #---------------------------------------------------------------
                 #| offset(byte) |                                              |
                 #---------------------------------------------------------------
@@ -56,12 +58,14 @@ class SvpnUdpServer(UdpServer):
                 #|      2       | Payload (JSON formatted control message)     |
                 #---------------------------------------------------------------
                 if data[0] != ipop_ver:
+                    print data[0]
                     logging.debug("ipop version mismatch: tincan:{0} controller"
                                   ":{1}".format(data[0].encode("hex"), \
                                        ipop_ver.encode("hex")))
                     sys.exit()
                 if data[1] == tincan_control:
                     msg = json.loads(data[2:])
+                    logging.debug("msg is %s" % msg)
                     logging.debug("recv %s %s" % (addr, data[2:]))
                     msg_type = msg.get("type", None)
                     if msg_type == "echo_request":

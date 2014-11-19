@@ -14,12 +14,16 @@ import sys
 from threading import Timer
 import time
 import struct
+import socket
+
+xmpp_username = socket.gethostname()
 
 # Set default config values
 CONFIG = {
-    "stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
-             "stun2.l.google.com:19302", "stun3.l.google.com:19302",
-             "stun4.l.google.com:19302"],
+    "stun": ["131.94.128.12:3478"],
+    #"stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
+    #         "stun2.l.google.com:19302", "stun3.l.google.com:19302",
+    #         "stun4.l.google.com:19302"],
     "turn": [],  # Contains dicts with "server", "user", "pass" keys
     "ip4": "172.16.0.1",
     "localhost": "127.0.0.1",
@@ -40,11 +44,11 @@ CONFIG = {
     "on-demand_inactive_timeout" : 600,
     "tincan_logging": 1,
     "controller_logging" : "INFO",
-    "icc" : False, # Inter-Controller Connection
+    "icc" : True, # Inter-Controller Connection Default = False
     "icc_port" : 30000,
     "switchmode" : 0,
     "trim_enabled": False,
-    "multihop": False,
+    "multihop": True,
     "multihop_cl": 100, #Multihop connection count limit
     "multihop_ihc": 3, #Multihop initial hop count
     "multihop_hl": 10, #Multihop maximum hop count limit

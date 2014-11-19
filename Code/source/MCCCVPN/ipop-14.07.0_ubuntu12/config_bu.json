@@ -3,7 +3,15 @@
     "xmpp_password": "password",
     "xmpp_host": "131.94.128.12",
     "ip4": "192.168.5.7",
+    "localhost": "127.0.0.1",
+    "ip6_prefix": "fd50:0dbc:41f2:4a3c",
+    "localhost6": "::1",
     "ip4_mask": 24,
+    "ip6_mask": 64,
+    "subnet_mask": 32,
+    "svpn_port": 5800,
+    "contr_port": 5801,
+    "local_uid": "",
     "tincan_logging": 1,
     "uid_size": 40,
     "sec": "True",
@@ -18,7 +26,7 @@
     "multihop_hl": 10,
     "multihop_tl": 1,
     "multihop_sr": "True",
-	"max_latency":5, #in milliseconds
+	"max_latency":5,
 	"min_latency":2,
-	"path_random_interval": 30 #in seconds
+	"path_random_interval": 30 
 }
