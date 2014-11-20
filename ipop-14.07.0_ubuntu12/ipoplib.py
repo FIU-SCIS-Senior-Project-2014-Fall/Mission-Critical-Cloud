@@ -51,13 +51,11 @@ CONFIG = {
     "trim_enabled": False,
     "multihop": True,
     "multihop_cl": 100, #Multihop connection count limit
-    "multihop_ihc": 3, #Multihop initial hop count
+    "multihop_ihc": 5, #Multihop initial hop count
     "multihop_hl": 10, #Multihop maximum hop count limit
     "multihop_tl": 1,  # Multihop time limit (second)
     "multihop_sr": True # Multihop source route
 }
-
-print CONFIG['xmpp_username']
 
 IP_MAP = {}
 
