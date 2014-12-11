@@ -14,11 +14,9 @@ import sys
 from threading import Timer
 import time
 import struct
-import socket
+import sys
 
-xmpp_username = socket.gethostname()
 
-print xmpp_username
 # Set default config values
 CONFIG = {
     "stun": ["131.94.128.12:3478"],
@@ -44,17 +42,20 @@ CONFIG = {
     "on-demand_connection" : False,
     "on-demand_inactive_timeout" : 600,
     "tincan_logging": 1,
-    "controller_logging" : "INFO",
+    "controller_logging" : "DEBUG",
     "icc" : True, # Inter-Controller Connection Default = False
     "icc_port" : 30000,
     "switchmode" : 0,
-    "trim_enabled": False,
+    "trim_enabled": True,
     "multihop": True,
     "multihop_cl": 100, #Multihop connection count limit
-    "multihop_ihc": 5, #Multihop initial hop count
+    "multihop_ihc": 0, #Multihop initial hop count
     "multihop_hl": 10, #Multihop maximum hop count limit
     "multihop_tl": 1,  # Multihop time limit (second)
-    "multihop_sr": True # Multihop source route
+    "multihop_sr": True, # Multihop source route
+    "recalc_time": 30,
+    "min_latency": 0,
+    "max_latency": 1
 }
 
 IP_MAP = {}
@@ -82,9 +83,9 @@ def pktdump(message, dump=None, *args, **argv):
             hext += " "
             if i % 16 == 14:
                 hext += "\n"
-        logging.log(5, message + "\n" + hext)
+        logging.log(10, message + "\n" + hext)
     else: 
-        logging.log(5, message, *args, **argv)
+        logging.log(10, message, *args, **argv)
 
 logging.pktdump = pktdump
  
@@ -147,7 +148,8 @@ def make_call(sock, payload=None, **params):
         return sock.sendto(ipop_ver + tincan_control + json.dumps(params), dest)
     else:
         return sock.sendto(ipop_ver + tincan_packet + payload, dest)
-      
+        
+    #return make_call(sock, m="set_remote_ip", uid=uid, ip4=ip4, ip6=ip6)
 
 def make_remote_call(sock, dest_addr, dest_port, m_type, payload, **params):
     dest = (dest_addr, dest_port)
@@ -201,6 +203,7 @@ def do_create_link(sock, uid, fpr, overlay_id, sec, cas, stun=None, turn=None):
             turn = random.choice(CONFIG["turn"])
         else:
             turn = {"server": "", "user": "", "pass": ""}
+            
     return make_call(sock, m="create_link", uid=uid, fpr=fpr,
                      overlay_id=overlay_id, stun=stun, turn=turn["server"],
                      turn_user=turn["user"],
@@ -250,7 +253,8 @@ class UdpServer(object):
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
         self.sock_list = [ self.sock, self.sock_svr ]
-
+        logging.debug("sock_list %s", self.sock_list)
+	
     def inter_controller_conn(self):
 
         self.cc_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -425,7 +429,7 @@ class UdpServer(object):
                   via=[self.state["_ip6"], v["ip6"]], ttl=ttl)
 
     def lookup(self, dest_ip6):
-        logging.pktdump("Lookup: {0} pending lookup:{1}".format(dest_ip6, self.lookup_req))
+	logging.pktdump("Lookup: {0} pending lookup:{1}".format(dest_ip6, self.lookup_req))
         if dest_ip6 in self.lookup_req:
             return
         # If no response from the lookup_request message at a certain time. Cancel the 
@@ -524,7 +528,7 @@ class UdpServer(object):
                       payload=None, msg_type="route_error",\
                       index=msg["index"]-1, via=msg["via"])\
 
-        if data[1] == tincan_packet: 
+        if data[1] == tincan_packet:
             target_ip6=ip6_b2a(data[40:56])
             logging.pktdump("Multihop Packet Destined to {0}".format(target_ip6))
             if target_ip6 == self.state["_ip6"]:
