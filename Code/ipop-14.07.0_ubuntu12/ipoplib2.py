@@ -531,18 +531,28 @@ class UdpServer(object):
         if data[1] == tincan_packet:
             target_ip6=ip6_b2a(data[40:56])
             logging.pktdump("Multihop Packet Destined to {0}".format(target_ip6))
+            #
+            # if the target is this node make the call
+            #
             if target_ip6 == self.state["_ip6"]:
                 make_call(self.sock, payload=null_uid + null_uid + data[2:])
                 return
 
+            # Otherwise the packet is for one of my direct peers    
             # The packet destined to its direct peers
+            # for each key in my peers ...
             for k, v in self.peers.iteritems():
+                # if the target is in my direct peers
                 if "ip6" in v and v["ip6"] == target_ip6:
+                    # make the REMOTE call to that peer
                     make_remote_call(sock=self.cc_sock, dest_addr=target_ip6,\
                       dest_port=CONFIG["icc_port"], m_type=tincan_packet,\
                       payload=data[2:])
                     return
-
+                    
+                    
+            # Otherwise the target is not in my direct peers but in an indirect peer
+            # This should not happen in our mc2 scenario
             # The packet is not in direct peers but have route information
             if ip6_b2a(data[40:56]) in self.far_peers: 
                 make_remote_call(sock=self.cc_sock,\
@@ -550,6 +560,7 @@ class UdpServer(object):
                   dest_port=CONFIG["icc_port"], m_type=tincan_packet,\
                   payload=data[2:])
                 return
+                
             logging.error("Unroutable packet. Oops this should not happen")
 
         if data[1] == tincan_sr6: 

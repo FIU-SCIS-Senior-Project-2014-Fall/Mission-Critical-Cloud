@@ -200,60 +200,53 @@ class SvpnUdpServer(UdpServer):
                     # |     22       | destination uid                              |
                     # |     42       | Payload (Ethernet frame)                     |
                     # |-------------------------------------------------------------|
-                    elif data[1] == tincan_packet or data[1] == tincan_sr6:
-                        # logging.pktdump( "Tincan Packet %s", data)
-                        
+                    elif data[1] == tincan_packet:         
                         # At this point, we only handle ipv6 packet
                         if data[54:56] == "\x86\xdd" and data[80:82] != "\xff\x02"\
                            and CONFIG["multihop"]:
                             logging.pktdump("Destination unknown packet", dump=data)
                             dest_ip6=ip6_b2a(data[80:96])
-                            
-                            # TRY MULTIHOP SERVER
-                            if not self.multihop_server(dest_ip6, data): 
-                            
-                                # IF MULTIHOP SERVER FAIL PROCEED AS USUAL
-                                if dest_ip6 in self.far_peers or dest_ip6 in self.peers:
-                                    logging.pktdump("Destination({0}) packet is in far" 
-                                          "peers({1})".format(dest_ip6, self.far_peers))
-                                    next_hop_addr = self.far_peers[dest_ip6]["via"][1]
-                                    if not next_hop_addr in self.peers_ip6:
-                                        del self.far_peers[dest_ip6]
-                                        self.lookup(dest_ip6)
-                                        return
-                                    if CONFIG["multihop_sr"]: # Source routing
-                                        # Attach all the ipv6 address of hop in the 
-                                        payload = tincan_sr6 # Multihop packet
-                                        payload = "\x01" # Hop Index
-                                        payload += chr(self.far_peers[dest_ip6]\
-                                                            ["hop_count"]+1) # Hop Count
-                                        for hop in self.far_peers[dest_ip6]["via"]:
-                                            payload += ip6_a2b(hop)
-                                        payload += data[80:96] 
-                                        payload += data[42:]
-                                        # send packet to the next hop
-                                        logging.pktdump("sending", dump=payload)
-                                        make_remote_call(sock=self.cc_sock,\
-                                          dest_addr=self.far_peers[dest_ip6]["via"][1],\
-                                          dest_port=CONFIG["icc_port"],\
-                                          m_type=tincan_sr6, payload=payload)
-                                    else:
-                                        # Non source route mode
-                                        # logging.debug("IN NOT SOURCE ROUTING LINE 165 %s" % dest_ip6)
-                                        make_remote_call(sock=self.cc_sock, \
-                                          dest_addr=self.far_peers[dest_ip6]["via"],\
-                                          dest_port=CONFIG["icc_port"],\
-                                          m_type=tincan_packet, payload=data[42:])
-                                else:
-                                    # Destination is not known, we flood lookup_req msg
+                            if dest_ip6 in self.far_peers or dest_ip6 in self.peers:
+                                logging.pktdump("Destination({0}) packet is in far" 
+                                      "peers({1})".format(dest_ip6, self.far_peers))
+                                next_hop_addr = self.far_peers[dest_ip6]["via"][1]
+                                if not next_hop_addr in self.peers_ip6:
+                                    del self.far_peers[dest_ip6]
                                     self.lookup(dest_ip6)
+                                    return
+                                if CONFIG["multihop_sr"]: # Source routing
+                                    # Attach all the ipv6 address of hop in the 
+                                    payload = tincan_sr6 # Multihop packet
+                                    payload = "\x01" # Hop Index
+                                    payload += chr(self.far_peers[dest_ip6]\
+                                                        ["hop_count"]+1) # Hop Count
+                                    for hop in self.far_peers[dest_ip6]["via"]:
+                                        payload += ip6_a2b(hop)
+                                    payload += data[80:96] 
+                                    payload += data[42:]
+                                    # send packet to the next hop
+                                    logging.pktdump("sending", dump=payload)
+                                    make_remote_call(sock=self.cc_sock,\
+                                      dest_addr=self.far_peers[dest_ip6]["via"][1],\
+                                      dest_port=CONFIG["icc_port"],\
+                                      m_type=tincan_sr6, payload=payload)
+                                else:
+                                    # Non source route mode
+                                    # logging.debug("IN NOT SOURCE ROUTING LINE 165 %s" % dest_ip6)
+                                    make_remote_call(sock=self.cc_sock, \
+                                      dest_addr=self.far_peers[dest_ip6]["via"],\
+                                      dest_port=CONFIG["icc_port"],\
+                                      m_type=tincan_packet, payload=data[42:])
+                            else:
+                                # Destination is not known, we flood lookup_req msg
+                                self.lookup(dest_ip6)
                         return
             elif sock == self.cc_sock and CONFIG["multihop"]:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 logging.pktdump("Packet received from {0}".format(addr))
                 self.multihop_handle(data)
     
-    def multihop_server(self, dest_ip6, data):
+    def multihop_server(self, data):
     
         # |-------------------------------------------------------------|
         # | offset(byte) |                                              |
@@ -265,17 +258,12 @@ class SvpnUdpServer(UdpServer):
         # |     42       | Payload (Ethernet frame)                     |
         # |-------------------------------------------------------------|
         
-        # GET NEW PATH
-        paths = self.gen_new_path(dest_ip6)
+        self.multihop_handle(data)
+        dest_ip6=ip6_b2a(data[80:96])
+        logging.debug("dest_ip6 %s", dest_ip6)
         
-        msg = json.loads(data[2:])
-        logging.debug("msg %s", msg)
-        source_uid = msg["uid"]
-        logging.debug( "Source_uid %s", source_uid )
-        dest_uid  = data[22:41] # or msg['dest']
-        logging.debug( "dest_uid %s", dest_uid )
-        
-        logging.debug( "self.peers_ip6 %s", self.peers_ip6 )
+        target_ip6=ip6_b2a(data[40:56])
+        logging.pktdump("Multihop Packet Destined to {0}".format(target_ip6))
         
         if data[1] == tincan_sr6:
             # do something different for this msg type
@@ -311,7 +299,6 @@ class SvpnUdpServer(UdpServer):
                     return True
             via = []
             
-            # Trims first ip encapsulation
             for i in range(hop_count):
                 via.append(ip6_b2a(data[4+i*16:4+16*i+16]))
                 
@@ -336,6 +323,8 @@ class SvpnUdpServer(UdpServer):
                 payload = "\x01" # Hop Index
                 payload += chr(self.hop_count+1) # Hop Count
                 
+                # GET NEW PATH
+                paths = self.gen_new_path(dest_ip6)
                 # ADD PATH HOPS TO PAYLOAD
                 for hop in paths:
                     logging.debug ( "%s", hop )
@@ -363,15 +352,15 @@ class SvpnUdpServer(UdpServer):
                   m_type=tincan_packet, payload=data[42:])
                 logging.debug("TRUE OUT MULTIHOP SERVER")
                 return True
-        else: 
+        else: pass
             # dest_ip6 not found in self.peers
-            logging.debug ( "dest_ip6 not found in self.peers" ) 
+            # logging.debug ( "dest_ip6 not found in self.peers" ) 
             # Destination is not known, we flood lookup_req msg
-            self.lookup(dest_ip6)
+            # self.lookup(dest_ip6)
             # self.create_connection(msg["uid"], fpr, 1,CONFIG["sec"], cas, ip4)
                     
+            # return False
         return False
-        
     '''
     Wrapper for find_path. Fixes max and min latency vars.
 
