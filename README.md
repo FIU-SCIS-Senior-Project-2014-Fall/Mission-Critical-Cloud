@@ -1,9 +1,9 @@
 Mission-Critical-Cloud
 ======================
 
-Introduction
+Introduction:
 
-This is the User Guide for the MC2 Service. This document provides basic installation, setup, and demonstration instructions to use the service. If you have any question please refer to the Accessing online help section of this document.
+This is the User and Installation Guide for the MC2 Service. This document provides basic installation, setup, and demonstration instructions to use the service. If you have any question please refer to the Accessing online help section of this document.
 
 Hardware and Software Requirements:
 
@@ -38,7 +38,7 @@ Run ./start.py to automatically run the MC^2 service the basic installation come
 
 	./start.py
 
-Getting Started 
+Getting Started:
 
 To verify installation retrieve the IPV6 address of any of the virtual machine nodes that has the MC2 service running. 
 
@@ -46,11 +46,10 @@ To verify installation retrieve the IPV6 address of any of the virtual machine n
 	
 Copy the ipv6 address and use it to ping6 from another virtual machine in group.
 
-Quick reference
 
 Accessing online help : Go to the projects main website at mcc-dev.cis.fiu.edu to get help. Alternatively you can access the GitHub page as well.
 
-References
+References:
 
 MC^2 Homepage: mcc-dev.cis.fiu.edu
 Github:  https://github.com/FIU-SCIS-Senior-Project-2014-Fall/Mission-Critical-Cloud.git
