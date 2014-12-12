@@ -37,6 +37,11 @@ Once launched clone the Mission Critical Cloud files into the base directory of 
 Run ./start.py to automatically run the MC^2 service the basic installation comes preconfigured to function properly and allows of virtual machines to self- discover.  You can change the default settings by editing the CONFIG.json file in the ipop directory.
 
 	./start.py
+	
+Alternatively you can follow the directions to install XMPP Server and the Social VPN from these links.
+
+	https://github.com/ipop-project/documentation/wiki/Installing-XMPP-server
+	https://github.com/ipop-project/documentation/wiki/Running-SocialVPN-on-Linux
 
 Getting Started:
 
