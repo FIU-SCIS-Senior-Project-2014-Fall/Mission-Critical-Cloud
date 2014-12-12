@@ -1,7 +1,3 @@
-'''
-Script to download and install IPOP on this VM 
-'''
-
 #!/usr/bin/env python
 
 import argparse
