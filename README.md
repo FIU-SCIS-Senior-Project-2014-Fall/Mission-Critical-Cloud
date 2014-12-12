@@ -22,10 +22,10 @@ This is the User Guide for the MC2 Service. This document provides basic install
         $ ./mcvpn.py
     This command will download install and start the ejabberd service and install the xmpp server.
     Launch virtual machines as required within your Cloud Framework of choice i.e. OpenStack or Amazon AWS. 
-    Once launched clone the Mission Critical Cloud files into the base directory of each virtual machine that will be a node member.  Once the git clone command completes change directory into the ipop-tincan folder
+    Once launched clone the Mission Critical Cloud files into the base directory of each virtual machine that will be a node member. Once the git clone command completes change directory into the ipop-tincan folder
         $ git clone https://github.com/FIU-SCIS-Senior-Project-2014-Fall/Mission-Critical-Cloud.git
         $ cd ~/Mission-Critical-Cloud/ipop-14.07.0_ubuntu12/
-    Run ./start.py to automatically run the MC^2 service the basic installation comes preconfigured to function properly and allows of virtual machines to self- discover.  You can change the default settings by editing the CONFIG.json file in the ipop directory.
+	Run ./start.py to automatically run the MC^2 service the basic installation comes preconfigured to function properly and allows of virtual machines to self- discover.  You can change the default settings by editing the CONFIG.json file in the ipop directory.
         $ ./start.py
         
 4.	Getting Started 
@@ -33,7 +33,7 @@ This is the User Guide for the MC2 Service. This document provides basic install
     To verify installation retrieve the IPV6 address of any of the virtual machine nodes that has the MC2 service running. 
         $ ./getstate.sh
     Copy the ipv6 address and use it to ping6 from another virtual machine in group.
-        $
+
 5.	Quick reference
 
 6.	Accessing online help
