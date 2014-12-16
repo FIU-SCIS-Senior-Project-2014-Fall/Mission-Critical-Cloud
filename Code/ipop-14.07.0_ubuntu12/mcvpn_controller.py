@@ -60,9 +60,9 @@ def build_connection_graph(fname):
 
     for v,c in zip(con_graph.vertices(), con_table.iteritems()):
         if v_name[v] == "":
-        v_name[v] = c[1]['name']
-        v_ip[v] = c[1]['ip']
-        v_uid[v] = c[1]['uid']
+            v_name[v] = c[1]['name']
+            v_ip[v] = c[1]['ip']
+            v_uid[v] = c[1]['uid']
     graph_draw(con_graph, vertex_text=con_graph.vertex_index, vertex_font_size=18,\
             output_size=(400, 400), output=fname)
 
