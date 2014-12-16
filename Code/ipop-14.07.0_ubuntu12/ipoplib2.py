@@ -149,8 +149,6 @@ def make_call(sock, payload=None, **params):
     else:
         return sock.sendto(ipop_ver + tincan_packet + payload, dest)
         
-    #return make_call(sock, m="set_remote_ip", uid=uid, ip4=ip4, ip6=ip6)
-
 def make_remote_call(sock, dest_addr, dest_port, m_type, payload, **params):
     dest = (dest_addr, dest_port)
     if m_type == tincan_control:
@@ -552,7 +550,7 @@ class UdpServer(object):
                     
                     
             # Otherwise the target is not in my direct peers but in an indirect peer
-            # This should not happen in our mc2 scenario
+            # This should not happen in our mc2 scenario assuming n connectedness
             # The packet is not in direct peers but have route information
             if ip6_b2a(data[40:56]) in self.far_peers: 
                 make_remote_call(sock=self.cc_sock,\
@@ -563,10 +561,12 @@ class UdpServer(object):
                 
             logging.error("Unroutable packet. Oops this should not happen")
 
+        # This handles packets that were already routed once
         if data[1] == tincan_sr6: 
             logging.pktdump("Multihop packet received", dump=data)
             hop_index = ord(data[2]) + 1
             hop_count = ord(data[3])
+            # If the Hop Count has bottomed out...
             if hop_index == hop_count:
                 make_call(self.sock, payload=null_uid + null_uid +\
                   data[4+(hop_index)*16:])

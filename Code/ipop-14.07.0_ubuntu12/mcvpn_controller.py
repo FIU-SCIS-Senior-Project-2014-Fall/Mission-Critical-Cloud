@@ -78,9 +78,9 @@ def calc_latency(): pass
 		# attach latency value to edge
 	# 	continue
           
-          
+
 class MC2Server(UdpServer):
-    def __init__(self, user, password, host, ip4):
+    def __init__(self, user, password, host, ip4, uid):
 
         # this dict stores the local user state
         self.state = {}
@@ -123,6 +123,9 @@ class MC2Server(UdpServer):
         # creates a new connection to a peer
         do_create_link(self.sock, uid, data, overlay_id, sec, cas)
         
+        # assigns an ip address to a remote peer
+        do_set_remote_ip(self.sock, uid, ip4, gen_ip6(uid))
+        
         ######################
         
         random_peer = random.choice(self.peerlist)
@@ -131,9 +134,20 @@ class MC2Server(UdpServer):
         
         ######################
 
-        # assigns an ip address to a remote peer
-        do_set_remote_ip(self.sock, uid, ip4, gen_ip6(uid))
+    def set_far_peers(self):
+        # for each peer in 
+        logging.debug("         PEERLIST            ")
+        for p, v in self.peerlist:
+            logging.debug("peer: %s", p)
+            logging.debug("value: %s", v)
+        
+            # choose a random path or length hop count 
+            # that does not include the peer
+            # the source or dest.
+            # set this in the far peers table
+        logging.debug("%s", self.peerlist)    
 
+        
     def trim_connections(self):
         # this function is called about every 30 seconds and deletes
         # offline connections, it is important to delete old connections
@@ -150,13 +164,17 @@ class MC2Server(UdpServer):
         for sock in socks[0]:
             # receive packet from tincan
             data, addr = sock.recvfrom(CONFIG["buf_size"])
-            if data[0] == '{':
+            if data[0] != ipop_ver:
+                logging.error("ipop version mismatch: tincan:{0} controller:{1}"
+                    "".format(data[0].encode("hex"), ipop_ver.encode("hex")))
+            
+            if data[1] == tincan_control: 
                 # transforms input to python objects
                 msg = json.loads(data)
                 logging.debug("recv %s %s" % (addr, data))
 
                 # get message type from object
-                msg_type = msg.get("type", None)
+                msg_type = msg.get("msg_type", None)
 
                 # this is the local state object, so we save it
                 if msg_type == "local_state": self.state = msg
@@ -179,6 +197,9 @@ class MC2Server(UdpServer):
                     # create a connection from the con_req/con_resp
                     self.create_connection(msg["uid"], fpr, 1, CONFIG["sec"],
                                            cas, ip4)
+            
+            self.set_far_peers()
+            #multihop_handle(data)
 
         
     def multihop_server(self, data):
@@ -389,7 +410,7 @@ class MC2Server(UdpServer):
     
 def main():
     parse_config()
-    server = SvpnUdpServer(CONFIG["xmpp_username"], CONFIG["xmpp_password"],
+    server = MC2Server(CONFIG["xmpp_username"], CONFIG["xmpp_password"],
                        CONFIG["xmpp_host"], CONFIG["ip4"], CONFIG["local_uid"])
     last_time = time.time()
     #build_connection_graph(None)
