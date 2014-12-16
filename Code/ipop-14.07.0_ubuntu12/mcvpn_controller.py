@@ -13,9 +13,9 @@ xmpp_username = socket.gethostname()
 The allowed connections table / forwarding table for this node
 '''
 con_table = {
-	"218b5107bd9782208cb061df76be82debf64f0":{"name":"jules", "ip6":""},
-	"a704065684d9672c376f63b538c8ddc0dd7ce9fc":{"name":"claire", "ip6":""},
-	"34bd1c0007bc32655635f330399f6a079e4d1ae3":{"name":"saman", "ip6":""}
+    "218b5107bd9782208cb061df76be82debf64f0":{"name":"jules", "ip6":""},
+    "a704065684d9672c376f63b538c8ddc0dd7ce9fc":{"name":"claire", "ip6":""},
+    "34bd1c0007bc32655635f330399f6a079e4d1ae3":{"name":"saman", "ip6":""}
 }
 
 con_graph = graph_tool.generation.complete_graph(len(con_table), directed=True)
@@ -49,20 +49,20 @@ The function draws a graph an outputs it as a file.
 @param fname, the file name for the output graph image
 '''
 def build_connection_graph(fname):
-	# add vertices for all keys in con_table
-	# this node is always the 0th vertex.
+    # add vertices for all keys in con_table
+    # this node is always the 0th vertex.
     if not fname:
         fname = "graph0.png"
 
-	me = con_graph.vertex(0)
-	v_name[me] = socket.gethostname()
-	v_ip[me] = get_ip_address('ipop')
+    me = con_graph.vertex(0)
+    v_name[me] = socket.gethostname()
+    v_ip[me] = get_ip_address('ipop')
 
-	for v,c in zip(con_graph.vertices(), con_table.iteritems()):
-	    if v_name[v] == "":
-		v_name[v] = c[1]['name']
-		v_ip[v] = c[1]['ip']
-		v_uid[v] = c[1]['uid']
+    for v,c in zip(con_graph.vertices(), con_table.iteritems()):
+        if v_name[v] == "":
+        v_name[v] = c[1]['name']
+        v_ip[v] = c[1]['ip']
+        v_uid[v] = c[1]['uid']
     graph_draw(con_graph, vertex_text=con_graph.vertex_index, vertex_font_size=18,\
             output_size=(400, 400), output=fname)
 
@@ -72,21 +72,16 @@ Updates graph edge details in con_graph
 '''
 def calc_latency(): pass
 
-	# for each edge of con_graph
-	# for e in edge_latency:
-		# compute edge latency value
-		# attach latency value to edge
-	# 	continue
-
 
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
-		UdpServer.__init__(self, user, password, host, ip4)
+
+        UdpServer.__init__(self, user, password, host, ip4)
         self.uid = uid
         self.peerlist = set()
         self.ip_map = dict(IP_MAP)
         self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
-
+        
         # this dict stores the local user state
         self.state = {}
 
@@ -114,7 +109,7 @@ class MC2Server(UdpServer):
 
         # configures the ipop interface and sets uid for XMPP network
         do_set_local_ip(self.sock, uid, ip4, gen_ip6(uid), CONFIG["ip4_mask"],
-    		CONFIG["ip6_mask"], CONFIG["subnet_mask"])
+            CONFIG["ip6_mask"], CONFIG["subnet_mask"])
 
         # connects to XMPP service
         do_register_service(self.sock, user, password, host)
@@ -122,9 +117,9 @@ class MC2Server(UdpServer):
         # requests tincan to get state
         do_get_state(self.sock, False)
 
-		do_set_translation(self.sock, 1)
+        do_set_translation(self.sock, 1)
 
-		if CONFIG["icc"]:
+        if CONFIG["icc"]:
             self.inter_controller_conn()
             self.lookup_req = {}
         if "network_ignore_list" in CONFIG:
