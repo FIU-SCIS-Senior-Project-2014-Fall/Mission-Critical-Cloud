@@ -43,7 +43,7 @@ CONFIG = {
     "on-demand_inactive_timeout" : 600,
     "tincan_logging": 1,
     "controller_logging" : "DEBUG",
-    "icc" : True, # Inter-Controller Connection Default = False
+    "icc" : False, # Inter-Controller Connection Default = False
     "icc_port" : 30000,
     "switchmode" : 0,
     "trim_enabled": True,
@@ -529,9 +529,9 @@ class UdpServer(object):
         if data[1] == tincan_packet:
             target_ip6=ip6_b2a(data[40:56])
             logging.pktdump("Multihop Packet Destined to {0}".format(target_ip6))
-            #
             # if the target is this node make the call
-            #
+            logging.debug("         Self.State          ")
+            logging.debug("%s", self.state)
             if target_ip6 == self.state["_ip6"]:
                 make_call(self.sock, payload=null_uid + null_uid + data[2:])
                 return

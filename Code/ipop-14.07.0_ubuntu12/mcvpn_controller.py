@@ -158,6 +158,17 @@ class MC2Server(UdpServer):
             # the source or dest.
             # set this in the far peers table
         logging.debug("%s", self.peerlist)
+        
+        logging.debug("         PEERS            ")
+        for p, v in self.peers:
+            logging.debug("peer: %s", p)
+            logging.debug("value: %s", v)
+
+            # choose a random path or length hop count
+            # that does not include the peer
+            # the source or dest.
+            # set this in the far peers table
+        logging.debug("%s", self.peers)
 
 
     def trim_connections(self):
@@ -176,29 +187,59 @@ class MC2Server(UdpServer):
         for sock in socks[0]:
             # receive packet from tincan
             data, addr = sock.recvfrom(CONFIG["buf_size"])
+            
             if data[0] != ipop_ver:
                 logging.error("ipop version mismatch: tincan:{0} controller:{1}"
                     "".format(data[0].encode("hex"), ipop_ver.encode("hex")))
+                sys.exit()
 
             if data[1] == tincan_control:
                 # transforms input to python objects
-                msg = json.loads(data)
+                msg = json.loads(data[2:])
                 logging.debug("recv %s %s" % (addr, data))
-
                 # get message type from object
-                msg_type = msg.get("msg_type", None)
+                msg_type = msg.get("type", None)
+                
+                if msg_type == "echo_request":
+                            make_remote_call(self.sock_svr, m_type=tincan_control,\
+                              dest_addr=addr[0], dest_port=addr[1], payload=None,\
+                              type="echo_reply")
 
                 # this is the local state object, so we save it
-                if msg_type == "local_state": self.state = msg
-
+                if msg_type == "local_state": 
+                    self.state = msg
+                           
                 # this is a peer state object, so we save it too
-                elif msg_type == "peer_state": self.peers[msg["uid"]] = msg
+                elif msg_type == "peer_state": 
+                    uid = msg["uid"]
+                    if msg["status"] == "online": 
+                        # This is where peers_ipX are updated
+                        self.peers_ip4[msg["ip4"]] = msg
+                        self.peers_ip6[msg["ip6"]] = msg
+                    else:
+                        if uid in self.peers and\
+                          self.peers[uid]["status"]=="online":
+                            del self.peers_ip4[self.peers[uid]["ip4"]]
+                            del self.peers_ip6[self.peers[uid]["ip6"]]
+                    self.peers[uid] = msg
+                    self.trigger_conn_request(msg)
 
                 # we ignore connection status notification for now
-                elif msg_type == "con_stat": pass
-
+                elif msg_type == "con_stat": 
+                    pass
+                                                  
                 # we create a connection if we see these types of messages
                 elif msg_type == "con_req" or msg_type == "con_resp":
+                    if CONFIG["multihop"]:
+                        conn_cnt = 0
+                        for k, v in self.peers.iteritems():
+                            if "fpr" in v and v["status"] == "online":
+                                conn_cnt += 1
+                        if conn_cnt >= CONFIG["multihop_cl"]:
+                            continue
+                    if self.check_collision(msg_type, msg["uid"]): 
+                        continue
+                        
                     fpr_len = len(self.state["_fpr"])
                     fpr = msg["data"][:fpr_len]
                     cas = msg["data"][fpr_len + 1:]
@@ -209,9 +250,11 @@ class MC2Server(UdpServer):
                     # create a connection from the con_req/con_resp
                     self.create_connection(msg["uid"], fpr, 1, CONFIG["sec"],
                                            cas, ip4)
+                return    
 
             self.set_far_peers()
-            #multihop_handle(data)
+            if self.state:
+                self.multihop_handle(data)
 
 
     def multihop_server(self, data):
