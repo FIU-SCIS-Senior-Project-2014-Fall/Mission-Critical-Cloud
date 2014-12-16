@@ -102,7 +102,7 @@ class MC2Server(UdpServer):
         uid = binascii.b2a_hex(os.urandom(CONFIG["uid_size"]/2))
 
         # enables logging
-        do_set_logging(self.sock)
+        do_set_logging(self.sock, CONFIG["tincan_logging"])
 
         # sets the callback in tincan in order to receive event notifications
         do_set_cb_endpoint(self.sock, self.sock.getsockname())
