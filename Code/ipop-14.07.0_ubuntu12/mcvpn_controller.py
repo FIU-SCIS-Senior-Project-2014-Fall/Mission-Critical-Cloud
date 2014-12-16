@@ -81,6 +81,11 @@ def calc_latency(): pass
 
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
+		UdpServer.__init__(self, user, password, host, ip4)
+        self.uid = uid
+        self.peerlist = set()
+        self.ip_map = dict(IP_MAP)
+        self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
 
         # this dict stores the local user state
         self.state = {}
@@ -108,13 +113,25 @@ class MC2Server(UdpServer):
         do_set_cb_endpoint(self.sock, self.sock.getsockname())
 
         # configures the ipop interface and sets uid for XMPP network
-        do_set_local_ip(self.sock, uid, ip4, gen_ip6(uid))
+        do_set_local_ip(self.sock, uid, ip4, gen_ip6(uid), CONFIG["ip4_mask"],
+    		CONFIG["ip6_mask"], CONFIG["subnet_mask"])
 
         # connects to XMPP service
         do_register_service(self.sock, user, password, host)
 
         # requests tincan to get state
-        do_get_state(self.sock)
+        do_get_state(self.sock, False)
+
+		do_set_translation(self.sock, 1)
+
+		if CONFIG["icc"]:
+            self.inter_controller_conn()
+            self.lookup_req = {}
+        if "network_ignore_list" in CONFIG:
+            logging.debug("network ignore list")
+            make_call(self.sock, m="set_network_ignore_list",\
+                             network_ignore_list=CONFIG["network_ignore_list"])
+
 
     def create_connection(self, uid, data, overlay_id, sec, cas, ip4):
         # keeps track of unique peers
