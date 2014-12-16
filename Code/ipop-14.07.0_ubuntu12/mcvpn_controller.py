@@ -12,7 +12,7 @@ xmpp_username = socket.gethostname()
 '''
 The allowed connections table / forwarding table for this node
 '''
-con_table = {	
+con_table = {
 	"218b5107bd9782208cb061df76be82debf64f0":{"name":"jules", "ip6":""},
 	"a704065684d9672c376f63b538c8ddc0dd7ce9fc":{"name":"claire", "ip6":""},
 	"34bd1c0007bc32655635f330399f6a079e4d1ae3":{"name":"saman", "ip6":""}
@@ -39,7 +39,7 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
-    
+
 '''
 Builds the graph of all the connections present in the network.
 Uses the con_table to name each vertex and assigns an ip to each vertex.
@@ -53,18 +53,18 @@ def build_connection_graph(fname):
 	# this node is always the 0th vertex.
     if not fname:
         fname = "graph0.png"
-        
+
 	me = con_graph.vertex(0)
 	v_name[me] = socket.gethostname()
 	v_ip[me] = get_ip_address('ipop')
-	
+
 	for v,c in zip(con_graph.vertices(), con_table.iteritems()):
 	    if v_name[v] == "":
 		v_name[v] = c[1]['name']
 		v_ip[v] = c[1]['ip']
 		v_uid[v] = c[1]['uid']
     graph_draw(con_graph, vertex_text=con_graph.vertex_index, vertex_font_size=18,\
-            output_size=(400, 400), output=fname)   
+            output_size=(400, 400), output=fname)
 
 '''
 Calculates the latencies of the edges between the paths by observing network traffic
@@ -77,7 +77,7 @@ def calc_latency(): pass
 		# compute edge latency value
 		# attach latency value to edge
 	# 	continue
-          
+
 
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
@@ -122,32 +122,32 @@ class MC2Server(UdpServer):
 
         # creates a new connection to a peer
         do_create_link(self.sock, uid, data, overlay_id, sec, cas)
-        
+
         # assigns an ip address to a remote peer
         do_set_remote_ip(self.sock, uid, ip4, gen_ip6(uid))
-        
+
         ######################
-        
+
         random_peer = random.choice(self.peerlist)
         print random_peer
-        
-        
+
+
         ######################
 
     def set_far_peers(self):
-        # for each peer in 
+        # for each peer in
         logging.debug("         PEERLIST            ")
         for p, v in self.peerlist:
             logging.debug("peer: %s", p)
             logging.debug("value: %s", v)
-        
-            # choose a random path or length hop count 
+
+            # choose a random path or length hop count
             # that does not include the peer
             # the source or dest.
             # set this in the far peers table
-        logging.debug("%s", self.peerlist)    
+        logging.debug("%s", self.peerlist)
 
-        
+
     def trim_connections(self):
         # this function is called about every 30 seconds and deletes
         # offline connections, it is important to delete old connections
@@ -167,8 +167,8 @@ class MC2Server(UdpServer):
             if data[0] != ipop_ver:
                 logging.error("ipop version mismatch: tincan:{0} controller:{1}"
                     "".format(data[0].encode("hex"), ipop_ver.encode("hex")))
-            
-            if data[1] == tincan_control: 
+
+            if data[1] == tincan_control:
                 # transforms input to python objects
                 msg = json.loads(data)
                 logging.debug("recv %s %s" % (addr, data))
@@ -197,13 +197,13 @@ class MC2Server(UdpServer):
                     # create a connection from the con_req/con_resp
                     self.create_connection(msg["uid"], fpr, 1, CONFIG["sec"],
                                            cas, ip4)
-            
+
             self.set_far_peers()
             #multihop_handle(data)
 
-        
+
     def multihop_server(self, data):
-    
+
         # |-------------------------------------------------------------|
         # | offset(byte) |                                              |
         # |-------------------------------------------------------------|
@@ -213,25 +213,25 @@ class MC2Server(UdpServer):
         # |     22       | destination uid                              |
         # |     42       | Payload (Ethernet frame)                     |
         # |-------------------------------------------------------------|
-        
+
         self.multihop_handle(data)
         dest_ip6=ip6_b2a(data[80:96])
         logging.debug("dest_ip6 %s", dest_ip6)
-        
+
         target_ip6=ip6_b2a(data[40:56])
         logging.pktdump("Multihop Packet Destined to {0}".format(target_ip6))
-        
+
         if data[1] == tincan_sr6:
             # do something different for this msg type
             # since this packet has already had a path
-            # attached to its  payload we don't need to 
+            # attached to its  payload we don't need to
             # assign a new path for this packet.
-            
+
             # Remove the first address in payload path
             # call make remote call to send the remainder
             # of the payload packet to the next hop in the
             # path.
-            
+
             logging.pktdump("Multihop packet received in Multihop Server.", dump=data)
             hop_index = ord(data[2]) + 1
             hop_count = ord(data[3])
@@ -244,55 +244,55 @@ class MC2Server(UdpServer):
             packet += data[3:]
             next_addr_offset = 4+(hop_index)*16
             next_hop_addr = data[next_addr_offset:next_addr_offset+16]
-            
+
             for k, v in self.peers.iteritems():
                 if v["ip6"]==ip6_b2a(next_hop_addr) and v["status"]=="online":
-                    
+
                     make_remote_call(sock=self.cc_sock,\
                       dest_addr=ip6_b2a(next_hop_addr),\
                       dest_port=CONFIG["icc_port"], m_type=tincan_sr6,\
                       payload=packet)
                     return True
             via = []
-            
+
             for i in range(hop_count):
                 via.append(ip6_b2a(data[4+i*16:4+16*i+16]))
-                
+
             make_remote_call(sock=self.cc_sock, dest_addr=via[hop_index-2],\
               dest_port=CONFIG["icc_port"], m_type=tincan_control,\
               payload=None, msg_type="route_error", via=via, index=hop_index-2)
-            
+
             logging.debug("Link lost send back route_error message to source{0}"
                           "".format(via[hop_index-2]))
             return False
-        
-            
+
+
         # else this packet needs a new path in our system
         # and we should calculate one.
         elif dest_ip6 in self.peers_ip6:
-            logging.pktdump("Destination({0}) packet is in" 
+            logging.pktdump("Destination({0}) packet is in"
                   "peers_ip6({1})".format(dest_ip6, self.far_peers))
-                  
+
             if CONFIG["multihop_sr"]: # Source routing
-                # Attach all the ipv6 address of hop in the 
+                # Attach all the ipv6 address of hop in the
                 payload = tincan_sr6 # Multihop packet
                 payload = "\x01" # Hop Index
                 payload += chr(self.hop_count+1) # Hop Count
-                
+
                 # GET NEW PATH
                 paths = self.gen_new_path(dest_ip6)
                 # ADD PATH HOPS TO PAYLOAD
                 for hop in paths:
                     logging.debug ( "%s", hop )
                     payload += ip6_a2b(hop)
-                payload += data[80:96] 
+                payload += data[80:96]
                 payload += data[42:]
-                
+
                 # send packet to the next hop
                 logging.pktdump("sending", dump=payload)
-                
+
                 do_set_remote_ip(self.sock, uid, ip4, gen_ip6(uid))
-                
+
                 make_remote_call(sock=self.sock,\
                   dest_addr=paths[0][0],\
                   dest_port=CONFIG["svpn_port"],\
@@ -310,18 +310,18 @@ class MC2Server(UdpServer):
                 return True
         else: pass
             # dest_ip6 not found in self.peers
-            # logging.debug ( "dest_ip6 not found in self.peers" ) 
+            # logging.debug ( "dest_ip6 not found in self.peers" )
             # Destination is not known, we flood lookup_req msg
             # self.lookup(dest_ip6)
             # self.create_connection(msg["uid"], fpr, 1,CONFIG["sec"], cas, ip4)
-                    
+
             # return False
         return False
     '''
     Wrapper for find_path. Fixes max and min latency vars.
 
     @returns a randomly chosen path.
-    '''          
+    '''
     def gen_new_path(self, dest):
         # get some info from a future traffic function
         latency = calc_latency()
@@ -334,7 +334,7 @@ class MC2Server(UdpServer):
                 min_latency = CONFIG['min_latency']
         else: pass
             # Raise error
-            
+
         # choose a random path from the peers set and return it
         return self.find_path(max_latency, min_latency, dest)
 
@@ -353,13 +353,13 @@ class MC2Server(UdpServer):
         paths = []
         # get required number of hops
         hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
-        
+
         logging.debug ( "%s", hop_count )
-        # this line makes it so that our max hop count 
+        # this line makes it so that our max hop count
         # is no greater than the number of peers in our cloud.
         if hop_count > len(self.peers_ip6):
             hop_count = len(self.peers_ip6)
-        
+
         logging.debug ( "%s", hop_count )
         logging.debug("%s", self.peers_ip6 )
         if hop_count == 0:
@@ -368,7 +368,7 @@ class MC2Server(UdpServer):
                 logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
                 paths.append(self.peers_ip6(dest)) # final dest
                 return paths
-                
+
         # NOTE: RANDOMIZATION ALGORITHM
         # _______________________________________________________________________________________________________
         # | Now the question becomes how many paths do we want to generate?                                      |
@@ -385,13 +385,13 @@ class MC2Server(UdpServer):
         # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
         # |______________________________________________________________________________________________________|
         # add hop count random elements from ip6_set
-        # make hop_count random samples of length hop_count 
+        # make hop_count random samples of length hop_count
         # and append that set into paths.
         # see above is hop_count is greater than peers_ip6
-        
+
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers_ip6, hop_count))
-        
+
         # choose a set of random vertices equal to the hop_count
         '''This section is for illustrative purposes
         v = g.vertex(randint(0, g.num_vertices()))
@@ -407,7 +407,7 @@ class MC2Server(UdpServer):
         '''
         logging.debug( "PATHS = %s",  paths )
         return paths
-    
+
 def main():
     parse_config()
     server = MC2Server(CONFIG["xmpp_username"], CONFIG["xmpp_password"],
@@ -424,4 +424,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
