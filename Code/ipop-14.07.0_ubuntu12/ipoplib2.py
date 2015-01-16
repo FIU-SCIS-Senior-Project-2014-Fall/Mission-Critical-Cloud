@@ -65,10 +65,13 @@ tincan_control = "\x01"
 tincan_packet = "\x02"
 tincan_sr6 = "\x03"
 tincan_sr6_end = "\x04"
+mcvpn_packet = "\x05"
 null_uid = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 null_uid += "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 bc_mac = "\xff\xff\xff\xff\xff\xff"
 null_mac = "\x00\x00\x00\x00\x00\x00"
+
+HOP_COUNT = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
 
 # PKTDUMP mode is for more detailed than debug logging, especially for dump
 # packet contents in hexadecimal to log
@@ -346,7 +349,7 @@ class UdpServer(object):
             logging.error("Unknown ARP message operation")
             return None
 
-    def packet_handle(self, data):
+    def packet_handle(self, data, m_type):
         ip4 = ip4_b2a(data[72:76])
         if ip4 in self.arp_table:
             if self.arp_table[ip4]["local"]:
@@ -354,7 +357,7 @@ class UdpServer(object):
                               " packet".format(ip4))
                 return
             make_remote_call(self.cc_sock,dest_addr=self.arp_table[ip4]["ip6"],\
-              dest_port=CONFIG["icc_port"], m_type=tincan_packet, 
+              dest_port=CONFIG["icc_port"], m_type=m_type, 
               payload=data[42:])
             logging.debug("send packet over controller {0} in {1}".format(ip4,\
                           self.arp_table))

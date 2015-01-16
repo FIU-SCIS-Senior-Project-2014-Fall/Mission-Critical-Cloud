@@ -9,30 +9,28 @@ import subprocess
 import uuid
 import VirtualMachine
 import Path
-import mcvpn
 
 class XmppServer():
 
-    def __init__(self, ipAdd, hostname, username, password):
+    def __init__(self, host, username, password):
         self.xmppId = uuid.uuid4()
-        self.ipAddress = ipAdd
-        self.hostname = hostname
+        self.host = host
         self.adminUser = user
         self.adminPassword = password
-        #self.virtualMachines =  #this is Virtual Machine object
+        self.virtualMachines =  [] #this is a list of Virtual Machine object
         #self.groups = #this is a vpn group object
 
     def getIp(self):
-        return self.ipAddress
+        return self.host
 
-    def getGroups(self):
-        return self.groups
+    #def getGroups(self):
+    #    return self.groups
 
     def listVms(self):
         return self.virtualMachines
 
     def getHost(self):
-        return self.hostname
+        return self.host
 
     def getUserName(self):
         return self.adminUser
@@ -46,14 +44,3 @@ class XmppServer():
         try:
             self.virtualMachines.remove(vm)
         except TypeError:
-
-
-# def main(self): pass
-
-
-
-
-
-
-
-
