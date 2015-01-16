@@ -172,7 +172,7 @@ class MC2Server(UdpServer):
         # waits for incoming connections
         socks = select.select([self.sock], [], [], CONFIG["wait_time"])
         for sock in socks[0]:
-             if sock == self.sock or sock == self.sock_svr:
+            if sock == self.sock or sock == self.sock_svr:
                 #---------------------------------------------------------------
                 #| offset(byte) |                                              |
                 #---------------------------------------------------------------
@@ -226,7 +226,7 @@ class MC2Server(UdpServer):
                                 msg["last_active"]=\
                                         self.peers[msg["uid"]]["last_active"]
                         self.peers[msg["uid"]] = msg
-    
+
                     # we ignore connection status notification for now
                     elif msg_type == "con_stat": pass
                     
@@ -251,7 +251,7 @@ class MC2Server(UdpServer):
                         ip4 = self.uid_ip_table[msg["uid"]]
                         self.create_connection(msg["uid"], fpr, 1, 
                                                CONFIG["sec"], cas, ip4)
-    
+
                     # send message is used as "request for start mutual 
                     # connection"
                     elif msg_type == "send_msg": 
@@ -332,11 +332,12 @@ class MC2Server(UdpServer):
                     print data
 
                     #AM I HERE?
-                    if self.uid == dest_uid:
+                    #if self.uid == dest_uid: 
+                     
                         
                     #PEEL
                     data = data[42:]
-    
+
                 else:
                     logging.error("Unknown type message")
                     logging.debug("{0}".format(data[0:].encode("hex")))
