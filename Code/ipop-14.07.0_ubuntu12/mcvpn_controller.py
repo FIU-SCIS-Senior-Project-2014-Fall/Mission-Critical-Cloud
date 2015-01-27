@@ -82,7 +82,7 @@ class MC2Server(UdpServer):
             make_call(self.sock, m="set_network_ignore_list",\
                              network_ignore_list=CONFIG["network_ignore_list"])
                              
-     def ctrl_conn_init(self):
+    def ctrl_conn_init(self):
         # enables logging
         do_set_logging(self.sock, CONFIG["tincan_logging"])
         # sets the callback in tincan in order to receive event notifications
@@ -166,7 +166,6 @@ class MC2Server(UdpServer):
                 #---------------------------------------------------------------
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 print data
-                print sock.
                 if data[0] != ipop_ver:
                     logging.debug("ipop version mismatch: tincan:{0} controller"
                                   ":{1}" "".format(data[0].encode("hex"), \
