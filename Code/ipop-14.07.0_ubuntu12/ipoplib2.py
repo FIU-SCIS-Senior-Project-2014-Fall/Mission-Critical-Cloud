@@ -71,7 +71,8 @@ null_uid += "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 bc_mac = "\xff\xff\xff\xff\xff\xff"
 null_mac = "\x00\x00\x00\x00\x00\x00"
 
-SOCKET_TYPE = socket.AF_PACKET
+SOCKET_TYPE = socket.AF_INET
+SOCKET_TYPE6 = socket.AF_INET6
 
 HOP_COUNT = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
 
@@ -252,8 +253,8 @@ class UdpServer(object):
             self.sock_svr = socket.socket(SOCKET_TYPE, socket.SOCK_DGRAM)
             self.sock_svr.bind((CONFIG["localhost6"], CONFIG["contr_port"]))
         else:
-            self.sock = socket.socket(SOCKET_TYPE, socket.SOCK_DGRAM)
-            self.sock_svr = socket.socket(SOCKET_TYPE, socket.SOCK_DGRAM)
+            self.sock = socket.socket(SOCKET_TYPE6, socket.SOCK_DGRAM)
+            self.sock_svr = socket.socket(SOCKET_TYPE6, socket.SOCK_DGRAM)
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
         self.sock_list = [ self.sock, self.sock_svr ]
