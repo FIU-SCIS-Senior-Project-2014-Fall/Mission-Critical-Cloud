@@ -71,8 +71,13 @@ null_uid += "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 bc_mac = "\xff\xff\xff\xff\xff\xff"
 null_mac = "\x00\x00\x00\x00\x00\x00"
 
-SOCKET_TYPE = socket.AF_INET
-SOCKET_TYPE6 = socket.AF_INET6
+SOCKET_TYPE = socket.SOCK_DGRAM
+SOCKET_TYPE6 = socket.SOCK_DGRAM
+
+SOCKET_FAMILY = socket.AF_PACKET
+SOCKET_FAMILY6 = socket.AF_PACKET
+
+SOCKET_PROTO = 0 #socket.IPPROTO_UDP
 
 HOP_COUNT = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
 
@@ -240,7 +245,6 @@ def do_set_trimpolicy(sock, trim_enabled):
     return make_call(sock, m="set_trimpolicy", trim_enabled=trim_enabled)
 
 class UdpServer(object):
-    # Changed AF_INET/6 to AF_PACKET
     def __init__(self, user, password, host, ip4):
         self.state = {}
         self.peers = {}
@@ -249,12 +253,12 @@ class UdpServer(object):
         self.far_peers = {}
         self.conn_stat = {}
         if socket.has_ipv6:
-            self.sock = socket.socket(SOCKET_TYPE, socket.SOCK_DGRAM)
-            self.sock_svr = socket.socket(SOCKET_TYPE, socket.SOCK_DGRAM)
+            self.sock = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6, SOCKET_PROTO)
+            self.sock_svr = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6)
             self.sock_svr.bind((CONFIG["localhost6"], CONFIG["contr_port"]))
         else:
-            self.sock = socket.socket(SOCKET_TYPE6, socket.SOCK_DGRAM)
-            self.sock_svr = socket.socket(SOCKET_TYPE6, socket.SOCK_DGRAM)
+            self.sock = socket.socket(SOCKET_FAMILY, SOCKET_TYPE)
+            self.sock_svr = socket.socket(SOCKET_FAMILY, SOCKET_TYPE)
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
         self.sock_list = [ self.sock, self.sock_svr ]

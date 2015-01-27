@@ -42,22 +42,11 @@ class MC2Server(UdpServer):
         #self.ip_map = dict(IP_MAP)
         self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
         self.ctrl_conn_init()
-        
-        # this dict stores the local user state
-        self.state = {}
-
-        # this dict store the state for each peer
-        self.peers = {}
 
         # this set keeps track of unique
         self.peerlist = set()
 
-        # this creates the UDP socket for communication with tincan
-        if socket.has_ipv6:
-            self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        else:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(("", 0))
+        self.uid_ip_table = {}
        
         do_set_translation(self.sock, 1)
         
