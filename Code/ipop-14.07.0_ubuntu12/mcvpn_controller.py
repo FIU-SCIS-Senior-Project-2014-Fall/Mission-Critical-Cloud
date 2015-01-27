@@ -10,15 +10,6 @@ import itertools
 xmpp_username = socket.gethostname()
 
 '''
-con_graph = graph_tool.generation.complete_graph(len(con_table), directed=True)
-
-v_name = con_graph.new_vertex_property("string")
-v_ip = con_graph.new_vertex_property("string")
-v_uid = con_graph.new_vertex_property("string")
-e_latency = con_graph.new_edge_property("double")
-'''
-
-'''
 Gets the ip address of the specified interface (e.g. ipop)
 
 @param ifname the name of the interface you want to return
@@ -32,33 +23,6 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
-
-'''
-Builds the graph of all the connections present in the network.
-Uses the con_table to name each vertex and assigns an ip to each vertex.
-The vm network is treated as a complete graph.
-The function draws a graph an outputs it as a file.
-
-@param fname, the file name for the output graph image
-'''
-def build_connection_graph(fname):
-    # add vertices for all keys in con_table
-    # this node is always the 0th vertex.
-    if not fname:
-        fname = "graph0.png"
-
-    me = con_graph.vertex(0)
-    v_name[me] = socket.gethostname()
-    v_ip[me] = get_ip_address('ipop')
-
-    for v,c in zip(con_graph.vertices(), con_table.iteritems()):
-        if v_name[v] == "":
-            v_name[v] = c[1]['name']
-            v_ip[v] = c[1]['ip']
-            v_uid[v] = c[1]['uid']
-    graph_draw(con_graph, vertex_text=con_graph.vertex_index, vertex_font_size=18,\
-            output_size=(400, 400), output=fname)
-
 '''
 Calculates the latencies of the edges between the paths by observing network traffic
 Updates graph edge details in con_graph
@@ -68,12 +32,16 @@ def calc_latency(): pass
 
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
-
         UdpServer.__init__(self, user, password, host, ip4)
-        self.uid = uid
-        self.peerlist = set()
-        self.ip_map = dict(IP_MAP)
+        self.idle_peers = {}
+        self.user = user
+        self.password = password
+        self.host = host
+        self.ip4 = ip4
+        self.uid = gen_uid(ip4)
+        #self.ip_map = dict(IP_MAP)
         self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
+        self.ctrl_conn_init()
         
         # this dict stores the local user state
         self.state = {}
@@ -90,37 +58,53 @@ class MC2Server(UdpServer):
         else:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(("", 0))
-
-        # creates a random 20-byte uid and translates it to a hex string
-        uid = binascii.b2a_hex(os.urandom(CONFIG["uid_size"]/2))
-
-        # enables logging
-        do_set_logging(self.sock, CONFIG["tincan_logging"])
-
-        # sets the callback in tincan in order to receive event notifications
-        do_set_cb_endpoint(self.sock, self.sock.getsockname())
-
-        # configures the ipop interface and sets uid for XMPP network
-        do_set_local_ip(self.sock, uid, ip4, gen_ip6(uid), CONFIG["ip4_mask"],
-            CONFIG["ip6_mask"], CONFIG["subnet_mask"])
-
-        # connects to XMPP service
-        do_register_service(self.sock, user, password, host)
-
-        # requests tincan to get state
-        do_get_state(self.sock, False)
-
+       
         do_set_translation(self.sock, 1)
+        
+        parts = CONFIG["ip4"].split(".")
+        ip_prefix = parts[0] + "." + parts[1] + "."
+        
+        for i in range(0, 255):
+            for j in range(0, 255):
+                ip = ip_prefix + str(i) + "." + str(j)
+                uid = gen_uid(ip)
+                self.uid_ip_table[uid] = ip
 
         if CONFIG["icc"]:
             self.inter_controller_conn()
             self.lookup_req = {}
+            
+        if CONFIG["switchmode"]:
+            self.arp_table = {}
+            
         if "network_ignore_list" in CONFIG:
             logging.debug("network ignore list")
             make_call(self.sock, m="set_network_ignore_list",\
                              network_ignore_list=CONFIG["network_ignore_list"])
+                             
+     def ctrl_conn_init(self):
+        # enables logging
+        do_set_logging(self.sock, CONFIG["tincan_logging"])
+        # sets the callback in tincan in order to receive event notifications
+        do_set_cb_endpoint(self.sock, self.sock.getsockname())
 
+        # configures the ipop interface and sets uid for XMPP network
+        if not CONFIG["router_mode"]:
+            do_set_local_ip(self.sock, self.uid, self.ip4, gen_ip6(self.uid),
+                             CONFIG["ip4_mask"], CONFIG["ip6_mask"],
+                             CONFIG["subnet_mask"])
+        else:
+            do_set_local_ip(self.sock, self.uid, CONFIG["router_ip"],
+                           gen_ip6(self.uid), CONFIG["router_ip4_mask"],
+                           CONFIG["router_ip6_mask"], CONFIG["subnet_mask"])
 
+        # connects to XMPP service
+        do_register_service(self.sock, self.user, self.password, self.host)
+        do_set_switchmode(self.sock, CONFIG["switchmode"])
+        do_set_trimpolicy(self.sock, CONFIG["trim_enabled"])
+        # requests tincan to get state
+        do_get_state(self.sock)
+        
     def create_connection(self, uid, data, overlay_id, sec, cas, ip4):
         # keeps track of unique peers
         self.peerlist.add(uid)
@@ -181,6 +165,8 @@ class MC2Server(UdpServer):
                 #|      2       | Payload (JSON formatted control message)     |
                 #---------------------------------------------------------------
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
+                print data
+                print sock.
                 if data[0] != ipop_ver:
                     logging.debug("ipop version mismatch: tincan:{0} controller"
                                   ":{1}" "".format(data[0].encode("hex"), \
@@ -513,7 +499,7 @@ class MC2Server(UdpServer):
 
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
         
-         paths = []
+        paths = []
 
         if hop_count == 0:
             # make hop final destination
@@ -569,7 +555,6 @@ def main():
     server = MC2Server(CONFIG["xmpp_username"], CONFIG["xmpp_password"],
                        CONFIG["xmpp_host"], CONFIG["ip4"], CONFIG["local_uid"])
     last_time = time.time()
-    #build_connection_graph(None)
     while True:
         server.serve()
         time_diff = time.time() - last_time

@@ -237,6 +237,7 @@ def do_set_trimpolicy(sock, trim_enabled):
     return make_call(sock, m="set_trimpolicy", trim_enabled=trim_enabled)
 
 class UdpServer(object):
+    # Changed AF_INET/6 to AF_PACKET
     def __init__(self, user, password, host, ip4):
         self.state = {}
         self.peers = {}
@@ -245,12 +246,12 @@ class UdpServer(object):
         self.far_peers = {}
         self.conn_stat = {}
         if socket.has_ipv6:
-            self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-            self.sock_svr = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            self.sock = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
+            self.sock_svr = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
             self.sock_svr.bind((CONFIG["localhost6"], CONFIG["contr_port"]))
         else:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock_svr = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.sock = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
+            self.sock_svr = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
         self.sock_list = [ self.sock, self.sock_svr ]
@@ -258,7 +259,7 @@ class UdpServer(object):
 	
     def inter_controller_conn(self):
 
-        self.cc_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self.cc_sock = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
 
         while True:
             try:
