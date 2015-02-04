@@ -13,8 +13,9 @@ import socket
 import sys
 from threading import Timer
 import time
-import struct
+from struct import *
 import sys
+
 
 
 # Set default config values
@@ -37,7 +38,7 @@ CONFIG = {
     "uid_size": 40,
     "sec": True,
     "wait_time": 15,
-    "buf_size": 65507,
+    "buf_size": 65565,
     "router_mode": False,
     "on-demand_connection" : False,
     "on-demand_inactive_timeout" : 600,
@@ -58,7 +59,6 @@ CONFIG = {
     "max_latency": 1
 }
 
-IP_MAP = {}
 
 ipop_ver = "\x02"
 tincan_control = "\x01"
@@ -74,10 +74,8 @@ null_mac = "\x00\x00\x00\x00\x00\x00"
 SOCKET_TYPE = socket.SOCK_DGRAM
 SOCKET_TYPE6 = socket.SOCK_DGRAM
 
-SOCKET_FAMILY = socket.AF_PACKET
-SOCKET_FAMILY6 = socket.AF_PACKET
-
-SOCKET_PROTO = 0 #socket.IPPROTO_UDP
+SOCKET_FAMILY = socket.AF_INET
+SOCKET_FAMILY6 = socket.AF_INET6
 
 HOP_COUNT = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
 
@@ -252,21 +250,30 @@ class UdpServer(object):
         self.peers_ip6 = {}
         self.far_peers = {}
         self.conn_stat = {}
+        self.sock_all = {}
         if socket.has_ipv6:
-            self.sock = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6, SOCKET_PROTO)
+            self.sock  = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6)
             self.sock_svr = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6)
             self.sock_svr.bind((CONFIG["localhost6"], CONFIG["contr_port"]))
         else:
             self.sock = socket.socket(SOCKET_FAMILY, SOCKET_TYPE)
             self.sock_svr = socket.socket(SOCKET_FAMILY, SOCKET_TYPE)
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
-        self.sock.bind(("", 0))
-        self.sock_list = [ self.sock, self.sock_svr ]
-        logging.debug("sock_list %s", self.sock_list)
+
+        try:
+            self.sock_udp = socket.socket( socket.AF_PACKET , socket.SOCK_RAW, socket.IPPROTO_ICMP ) #socket.ntohs(0x0003)) #socket.IPPROTO_ICMP)
+        except socket.error , msg:
+            logging.debug( 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1] )
+            sys.exit()
+ 
+        
+        #self.sock_udp.bind(("", 0))
+        self.sock_list = [ self.sock_udp, self.sock_svr ]
+        self.cc_sock = {}
 	
     def inter_controller_conn(self):
 
-        self.cc_sock = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM)
+        self.cc_sock = socket.socket(SOCKET_FAMILY6, SOCKET_TYPE6)
 
         while True:
             try:

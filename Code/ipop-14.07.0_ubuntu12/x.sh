@@ -4,7 +4,7 @@
 
 
 cd ~/Mission-Critical-Cloud/ipop-14.07.0_ubuntu12/
-./kill.sh
+sudo ./kill.sh
 sudo sh -c './ipop-tincan-x86_64 1> out.log 2> err.log &'
 chmod 755 mcvpn_controller.py
 ./mcvpn_controller.py -c config.json & #> log.txt &

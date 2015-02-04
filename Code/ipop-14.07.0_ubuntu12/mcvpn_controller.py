@@ -7,7 +7,11 @@ import fcntl
 import struct
 import itertools
 
-xmpp_username = socket.gethostname()
+
+
+def eth_addr (a) :
+    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
+    return b
 
 '''
 Gets the ip address of the specified interface (e.g. ipop)
@@ -29,7 +33,6 @@ Updates graph edge details in con_graph
 '''
 def calc_latency(): pass
 
-
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
         UdpServer.__init__(self, user, password, host, ip4)
@@ -39,7 +42,6 @@ class MC2Server(UdpServer):
         self.host = host
         self.ip4 = ip4
         self.uid = gen_uid(ip4)
-        #self.ip_map = dict(IP_MAP)
         self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
         self.ctrl_conn_init()
 
@@ -48,7 +50,7 @@ class MC2Server(UdpServer):
 
         self.uid_ip_table = {}
        
-        do_set_translation(self.sock, 1)
+        #do_set_translation(self.sock, 1)
         
         parts = CONFIG["ip4"].split(".")
         ip_prefix = parts[0] + "." + parts[1] + "."
@@ -93,18 +95,62 @@ class MC2Server(UdpServer):
         do_set_trimpolicy(self.sock, CONFIG["trim_enabled"])
         # requests tincan to get state
         do_get_state(self.sock)
+    
+    def trim_connections(self):
+
+        for k, v in self.peers.iteritems():
+            if "fpr" in v and v["status"] == "offline":
+                if v["last_time"] > CONFIG["wait_time"] * 2:
+                    do_send_msg(self.sock, "send_msg", 1, k,
+                                "destroy" + self.state["_uid"])
+                    do_trim_link(self.sock, k)
+            if CONFIG["on-demand_connection"] and v["status"] == "online": 
+                if v["last_active"] + CONFIG["on-demand_inactive_timeout"]\
+                                                              < time.time():
+                    logging.debug("Inactive, trimming node:{0}".format(k))
+                    do_send_msg(self.sock, 1, "send_msg", k,
+                                "destroy" + self.state["_uid"])
+                    do_trim_link(self.sock, k)
+ 
+    def ondemand_create_connection(self, uid, send_req):
+        logging.debug("idle peers {0}".format(self.idle_peers))
+        peer = self.idle_peers[uid]
+        fpr_len = len(self.state["_fpr"])
+        fpr = peer["data"][:fpr_len]
+        cas = peer["data"][fpr_len + 1:]
+        ip4 = self.uid_ip_table[peer["uid"]]
+        logging.debug("Start mutual creating connection")
+        if send_req:
+            do_send_msg(self.sock, "send_msg", 1, uid, fpr)
+        self.create_connection(peer["uid"], fpr, 1, CONFIG["sec"], cas, ip4)
+
+    def create_connection_req(self, data):
+        version_ihl = struct.unpack('!B', data[54:55])
+        version = version_ihl[0] >> 4
+        if version == 4:
+            s_addr = socket.inet_ntoa(data[66:70])
+            d_addr = socket.inet_ntoa(data[70:74])
+        elif version == 6:
+            s_addr = socket.inet_ntop(socket.AF_INET6, data[62:78])
+            d_addr = socket.inet_ntop(socket.AF_INET6, data[78:94])
+            # At present, we do not handle ipv6 multicast
+            if d_addr.startswith("ff02"):
+                return
+
+        uid = gen_uid(d_addr)
+        try:
+            msg = self.idle_peers[uid]
+        except KeyError:
+            logging.error("Peer {0} is not logged in".format(d_addr))
+            return
+        logging.debug("idle_peers[uid] --- {0}".format(msg))
+        self.ondemand_create_connection(uid, send_req=True)
         
-    def create_connection(self, uid, data, overlay_id, sec, cas, ip4):
+    def create_connection(self, uid, data, nid, sec, cas, ip4):
         # keeps track of unique peers
         self.peerlist.add(uid)
-
-        # creates a new connection to a peer
-        do_create_link(self.sock, uid, data, overlay_id, sec, cas)
-
-        # assigns an ip address to a remote peer
+        do_create_link(self.sock, uid, data, nid, sec, cas)
         do_set_remote_ip(self.sock, uid, ip4, gen_ip6(uid))
-
-
 
     def set_far_peers(self):
         # for each peer in
@@ -130,22 +176,11 @@ class MC2Server(UdpServer):
             # set this in the far peers table
         logging.debug("%s", self.peers)
 
-
-    def trim_connections(self):
-        # this function is called about every 30 seconds and deletes
-        # offline connections, it is important to delete old connections
-        # because tincan will not allow reconnections if old connections
-        # are still around
-        for k, v in self.peers.iteritems():
-            if "fpr" in v and v["status"] == "offline":
-                if v["last_time"] > CONFIG["wait_time"] * 2:
-                    do_trim_link(self.sock, k)
-
     def serve(self):
         # waits for incoming connections
-        socks = select.select([self.sock], [], [], CONFIG["wait_time"])
-        for sock in socks[0]:
-            if sock == self.sock or sock == self.sock_svr:
+        socks, _, _ = select.select( self.sock_list, [], [], CONFIG["wait_time"])        
+        for sock in socks:
+            if sock == self.sock_udp or sock == self.sock_svr:
                 #---------------------------------------------------------------
                 #| offset(byte) |                                              |
                 #---------------------------------------------------------------
@@ -153,13 +188,60 @@ class MC2Server(UdpServer):
                 #|      1       | message type                                 |
                 #|      2       | Payload (JSON formatted control message)     |
                 #---------------------------------------------------------------
-                data, addr = sock.recvfrom(CONFIG["buf_size"])
-                print data
-                if data[0] != ipop_ver:
-                    logging.debug("ipop version mismatch: tincan:{0} controller"
-                                  ":{1}" "".format(data[0].encode("hex"), \
-                                   ipop_ver.encode("hex")))
-                    sys.exit()
+
+                packet = sock.recvfrom(CONFIG["buf_size"])
+
+                data, addr = packet
+                
+                print addr
+
+                #for p in packet:
+                #    print p,
+
+
+                '''
+                logging.debug("%s", packet)
+
+                #parse ethernet header
+                eth_length = 14
+     
+                eth_header = packet[:eth_length]
+                eth = unpack('!6s6sH' , eth_header)
+                eth_protocol = socket.ntohs(eth[2])
+                #logging.debug( 'Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol) )
+                '''
+
+                '''               
+                #Parse IP packets, IP Protocol number = 8
+                if eth_protocol == 8 :
+                    #Parse IP header
+                    #take first 20 characters for the ip header
+                    ip_header = packet[eth_length:20+eth_length]
+                    
+                    #now unpack them :)
+                    iph = unpack('!BBHHHBBH4s4s' , ip_header)
+             
+                    version_ihl = iph[0]
+                    version = version_ihl >> 4
+                    ihl = version_ihl & 0xF
+             
+                    iph_length = ihl * 4
+             
+                    ttl = iph[5]
+                    protocol = iph[6]
+                    s_addr = socket.inet_ntoa(iph[8]);
+                    d_addr = socket.inet_ntoa(iph[9]);
+                            
+
+                    if protocol == 1:
+                        logging.debug( "ICMP PACKET" )
+
+                if data[0] != ipop_ver :
+                    pass
+                    #logging.debug("ipop version mismatch: tincan:{0} controller" )
+                                  #":{1}" "".format(data[0].encode("hex"), \
+                                  # ipop_ver.encode("hex")))
+                    #sys.exit()
                 if data[1] == tincan_control:
                     msg = json.loads(data[2:])
                     logging.debug("recv %s %s" % (addr, data[2:]))
@@ -312,20 +394,20 @@ class MC2Server(UdpServer):
                     #PEEL
                     data = data[42:]
 
-                else:
-                    logging.error("Unknown type message")
-                    logging.debug("{0}".format(data[0:].encode("hex")))
-                    sys.exit()
+                else: pass
+                    #logging.error("Unknown type message")
+                    #logging.debug("{0}".format(data[0:].encode("hex")))
+                    #sys.exit()
 
             elif sock == self.cc_sock:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 logging.debug("ICC packet received from {0}".format(addr))
                 self.icc_packet_handle(data)
                 
-            else:
-                logging.error("Unknown type socket")
-                sys.exit()
-
+            #else:
+                #logging.error("Unknown type socket")
+                #sys.exit()
+            '''
 
     def multihop_server(self, data):
 
@@ -442,6 +524,7 @@ class MC2Server(UdpServer):
 
             # return False
         return False
+
     '''
     Wrapper for find_path. Fixes max and min latency vars.
 
