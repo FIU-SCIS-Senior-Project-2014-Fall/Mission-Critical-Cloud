@@ -261,14 +261,14 @@ class UdpServer(object):
             self.sock_svr.bind((CONFIG["localhost"], CONFIG["contr_port"]))
 
         try:
-            self.sock_udp = socket.socket( socket.AF_PACKET , socket.SOCK_RAW, socket.IPPROTO_ICMP ) #socket.ntohs(0x0003)) #socket.IPPROTO_ICMP)
+            self.sock_udp = socket.socket( socket.AF_PACKET , socket.SOCK_RAW, socket.ntohs(0x0003) )
         except socket.error , msg:
             logging.debug( 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1] )
             sys.exit()
  
         
         #self.sock_udp.bind(("", 0))
-        self.sock_list = [ self.sock_udp, self.sock_svr ]
+        self.sock_list = [ self.sock_udp ]
         self.cc_sock = {}
 	
     def inter_controller_conn(self):

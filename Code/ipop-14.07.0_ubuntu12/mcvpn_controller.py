@@ -180,7 +180,7 @@ class MC2Server(UdpServer):
         # waits for incoming connections
         socks, _, _ = select.select( self.sock_list, [], [], CONFIG["wait_time"])        
         for sock in socks:
-            if sock == self.sock_udp or sock == self.sock_svr:
+            if sock == self.sock_udp: #or sock == self.sock_svr:
                 #---------------------------------------------------------------
                 #| offset(byte) |                                              |
                 #---------------------------------------------------------------
@@ -191,26 +191,62 @@ class MC2Server(UdpServer):
 
                 packet = sock.recvfrom(CONFIG["buf_size"])
 
-                data, addr = packet
+                packet, addr = packet
+
+                #logging.debug("%s", packet)
                 
-                print addr
+                #logging.debug("%s", addr)
 
-                #for p in packet:
-                #    print p,
-
-
-                '''
-                logging.debug("%s", packet)
-
-                #parse ethernet header
+                 #parse ethernet header
                 eth_length = 14
-     
+                 
                 eth_header = packet[:eth_length]
                 eth = unpack('!6s6sH' , eth_header)
                 eth_protocol = socket.ntohs(eth[2])
-                #logging.debug( 'Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol) )
-                '''
+                #print 'Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol)
+             
+                #Parse IP packets, IP Protocol number = 8
+                if eth_protocol == 8 :
+                    #Parse IP header
+                    #take first 20 characters for the ip header
+                    ip_header = packet[eth_length:20+eth_length]
 
+                    #now unpack them :)
+                    iph = unpack('!BBHHHBBH4s4s' , ip_header)
+             
+                    version_ihl = iph[0]
+                    version = version_ihl >> 4
+                    ihl = version_ihl & 0xF
+             
+                    iph_length = ihl * 4
+             
+                    ttl = iph[5]
+                    protocol = iph[6]
+                    s_addr = socket.inet_ntoa(iph[8]);
+                    d_addr = socket.inet_ntoa(iph[9]);
+
+
+                    u = iph_length + eth_length
+                    icmph_length = 4
+                    icmp_header = packet[u:u+4]
+         
+                    #now unpack them :)
+                    icmph = unpack('!BBH' , icmp_header)
+                     
+                    icmp_type = icmph[0]
+                    code = icmph[1]
+                    checksum = icmph[2]
+
+                    if(str(s_addr) == CONFIG['ip4']):
+                        logging.debug( "True" )
+
+                    h_size = eth_length + iph_length + icmph_length
+                    data_size = len(packet) - h_size
+             
+                    #get data from the packet
+                    data = packet[h_size:]
+            
+ 
                 '''               
                 #Parse IP packets, IP Protocol number = 8
                 if eth_protocol == 8 :
