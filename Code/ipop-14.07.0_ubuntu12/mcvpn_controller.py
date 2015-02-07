@@ -181,37 +181,25 @@ class MC2Server(UdpServer):
         socks, _, _ = select.select( self.sock_list, [], [], CONFIG["wait_time"])        
         for sock in socks:
             if sock == self.sock_udp: #or sock == self.sock_svr:
-                #---------------------------------------------------------------
-                #| offset(byte) |                                              |
-                #---------------------------------------------------------------
-                #|      0       | ipop version                                 |
-                #|      1       | message type                                 |
-                #|      2       | Payload (JSON formatted control message)     |
-                #---------------------------------------------------------------
-
+                
                 packet = sock.recvfrom(CONFIG["buf_size"])
 
                 packet, addr = packet
-
-                #logging.debug("%s", packet)
-                
-                #logging.debug("%s", addr)
-
-                 #parse ethernet header
+          
+                #parse ethernet header
                 eth_length = 14
                  
                 eth_header = packet[:eth_length]
                 eth = unpack('!6s6sH' , eth_header)
                 eth_protocol = socket.ntohs(eth[2])
-                #print 'Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol)
-             
+            
                 #Parse IP packets, IP Protocol number = 8
                 if eth_protocol == 8 :
                     #Parse IP header
                     #take first 20 characters for the ip header
                     ip_header = packet[eth_length:20+eth_length]
 
-                    #now unpack them :)
+                    #now unpack them
                     iph = unpack('!BBHHHBBH4s4s' , ip_header)
              
                     version_ihl = iph[0]
@@ -230,54 +218,49 @@ class MC2Server(UdpServer):
                     icmph_length = 4
                     icmp_header = packet[u:u+4]
          
-                    #now unpack them :)
+                    #now unpack them
                     icmph = unpack('!BBH' , icmp_header)
                      
                     icmp_type = icmph[0]
                     code = icmph[1]
                     checksum = icmph[2]
 
+	 	    # If this packet's src addr is the same as the
+	     	    # config address then this packet originates
+		    # from the local machine. We should introduce
+	    	    # logic to handle the routing of this packet.
                     if(str(s_addr) == CONFIG['ip4']):
-                        logging.debug( "True" )
+                        logging.debug( "Local Packet Found!" )
+			route = calcRoute(s_addr, d_addr)
+			packet = encapsulate(route, packet)
+			send(packet)
+			logging.debug( "Local Packet Route Calculated and Sent!" )
+			continue
+		    else:
+			logging.error( "This is NOT a Local Packet!" ) 
+			continue
 
                     h_size = eth_length + iph_length + icmph_length
                     data_size = len(packet) - h_size
              
                     #get data from the packet
                     data = packet[h_size:]
-            
- 
-                '''               
-                #Parse IP packets, IP Protocol number = 8
-                if eth_protocol == 8 :
-                    #Parse IP header
-                    #take first 20 characters for the ip header
-                    ip_header = packet[eth_length:20+eth_length]
-                    
-                    #now unpack them :)
-                    iph = unpack('!BBHHHBBH4s4s' , ip_header)
-             
-                    version_ihl = iph[0]
-                    version = version_ihl >> 4
-                    ihl = version_ihl & 0xF
-             
-                    iph_length = ihl * 4
-             
-                    ttl = iph[5]
-                    protocol = iph[6]
-                    s_addr = socket.inet_ntoa(iph[8]);
-                    d_addr = socket.inet_ntoa(iph[9]);
-                            
 
-                    if protocol == 1:
-                        logging.debug( "ICMP PACKET" )
+		else:continue
 
-                if data[0] != ipop_ver :
-                    pass
-                    #logging.debug("ipop version mismatch: tincan:{0} controller" )
-                                  #":{1}" "".format(data[0].encode("hex"), \
-                                  # ipop_ver.encode("hex")))
-                    #sys.exit()
+		#---------------------------------------------------------------
+                #| offset(byte) |                                              |
+                #---------------------------------------------------------------
+                #|      0       | ipop version                                 |
+                #|      1       | message type                                 |
+                #|      2       | Payload (JSON formatted control message)     |
+                #---------------------------------------------------------------
+                
+		if data[0] != ipop_ver :
+                    logging.debug("ipop version mismatch: tincan:{0} controller" )
+                                  ":{1}" "".format(data[0].encode("hex"), \
+                                  ipop_ver.encode("hex")))
+                    sys.exit()
                 if data[1] == tincan_control:
                     msg = json.loads(data[2:])
                     logging.debug("recv %s %s" % (addr, data[2:]))
@@ -566,7 +549,7 @@ class MC2Server(UdpServer):
 
     @returns a randomly chosen path.
     '''
-    def gen_new_path(self, dest):
+    def calcRoute(self, source, dest):
         # get some info from a future traffic function
         latency = calc_latency()
         if isinstance(CONFIG['min_latency'], int) and isinstance(CONFIG['max_latency'], int):
