@@ -6,12 +6,13 @@ import socket
 import fcntl
 import struct
 import itertools
+import os
 
 
 
 def eth_addr (a) :
-    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
-    return b
+  b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
+  return b
 
 '''
 Gets the ip address of the specified interface (e.g. ipop)
@@ -20,12 +21,12 @@ Gets the ip address of the specified interface (e.g. ipop)
 '''
 # needs fixing to return ip6
 def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  return socket.inet_ntoa(fcntl.ioctl(
+      s.fileno(),
+      0x8915,  # SIOCGIFADDR
+      struct.pack('256s', ifname[:15])
+  )[20:24])
 
 '''
 Calculates the latencies of the edges between the paths by observing network traffic
@@ -35,44 +36,44 @@ def calc_latency(): pass
 
 class MC2Server(UdpServer):
     def __init__(self, user, password, host, ip4, uid):
-        UdpServer.__init__(self, user, password, host, ip4)
-        self.idle_peers = {}
-        self.user = user
-        self.password = password
-        self.host = host
-        self.ip4 = ip4
-        self.uid = gen_uid(ip4)
-        self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
-        self.ctrl_conn_init()
+      UdpServer.__init__(self, user, password, host, ip4)
+      self.idle_peers = {}
+      self.user = user
+      self.password = password
+      self.host = host
+      self.ip4 = ip4
+      self.uid = gen_uid(ip4)
+      self.hop_count = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
+      self.ctrl_conn_init()
 
-        # this set keeps track of unique
-        self.peerlist = set()
+      # this set keeps track of unique peers
+      self.peerlist = set()
 
-        self.uid_ip_table = {}
-       
-        #do_set_translation(self.sock, 1)
-        
-        parts = CONFIG["ip4"].split(".")
-        ip_prefix = parts[0] + "." + parts[1] + "."
-        
-        for i in range(0, 255):
-            for j in range(0, 255):
-                ip = ip_prefix + str(i) + "." + str(j)
-                uid = gen_uid(ip)
-                self.uid_ip_table[uid] = ip
+      self.uid_ip_table = {}
 
-        if CONFIG["icc"]:
-            self.inter_controller_conn()
-            self.lookup_req = {}
-            
-        if CONFIG["switchmode"]:
-            self.arp_table = {}
-            
-        if "network_ignore_list" in CONFIG:
-            logging.debug("network ignore list")
-            make_call(self.sock, m="set_network_ignore_list",\
-                             network_ignore_list=CONFIG["network_ignore_list"])
-                             
+      #do_set_translation(self.sock, 1)
+
+      parts = CONFIG["ip4"].split(".")
+      ip_prefix = parts[0] + "." + parts[1] + "."
+
+      for i in range(0, 255):
+          for j in range(0, 255):
+              ip = ip_prefix + str(i) + "." + str(j)
+              uid = gen_uid(ip)
+              self.uid_ip_table[uid] = ip
+
+      if CONFIG["icc"]:
+          self.inter_controller_conn()
+          self.lookup_req = {}
+
+      if CONFIG["switchmode"]:
+          self.arp_table = {}
+
+      if "network_ignore_list" in CONFIG:
+          logging.debug("network ignore list")
+          make_call(self.sock, m="set_network_ignore_list",\
+                           network_ignore_list=CONFIG["network_ignore_list"])
+
     def ctrl_conn_init(self):
         # enables logging
         do_set_logging(self.sock, CONFIG["tincan_logging"])
@@ -95,7 +96,7 @@ class MC2Server(UdpServer):
         do_set_trimpolicy(self.sock, CONFIG["trim_enabled"])
         # requests tincan to get state
         do_get_state(self.sock)
-    
+
     def trim_connections(self):
 
         for k, v in self.peers.iteritems():
@@ -104,14 +105,14 @@ class MC2Server(UdpServer):
                     do_send_msg(self.sock, "send_msg", 1, k,
                                 "destroy" + self.state["_uid"])
                     do_trim_link(self.sock, k)
-            if CONFIG["on-demand_connection"] and v["status"] == "online": 
+            if CONFIG["on-demand_connection"] and v["status"] == "online":
                 if v["last_active"] + CONFIG["on-demand_inactive_timeout"]\
                                                               < time.time():
                     logging.debug("Inactive, trimming node:{0}".format(k))
                     do_send_msg(self.sock, 1, "send_msg", k,
                                 "destroy" + self.state["_uid"])
                     do_trim_link(self.sock, k)
- 
+
     def ondemand_create_connection(self, uid, send_req):
         logging.debug("idle peers {0}".format(self.idle_peers))
         peer = self.idle_peers[uid]
@@ -145,7 +146,7 @@ class MC2Server(UdpServer):
             return
         logging.debug("idle_peers[uid] --- {0}".format(msg))
         self.ondemand_create_connection(uid, send_req=True)
-        
+
     def create_connection(self, uid, data, nid, sec, cas, ip4):
         # keeps track of unique peers
         self.peerlist.add(uid)
@@ -159,12 +160,12 @@ class MC2Server(UdpServer):
             logging.debug("peer: %s", p)
             logging.debug("value: %s", v)
 
-            # choose a random path or length hop count
-            # that does not include the peer
-            # the source or dest.
-            # set this in the far peers table
+        # choose a random path or length hop count
+        # that does not include the peer
+        # the source or dest.
+        # set this in the far peers table
         logging.debug("%s", self.peerlist)
-        
+
         logging.debug("         PEERS            ")
         for p, v in self.peers:
             logging.debug("peer: %s", p)
@@ -175,109 +176,175 @@ class MC2Server(UdpServer):
             # the source or dest.
             # set this in the far peers table
         logging.debug("%s", self.peers)
+    
+    def wrap(self, route, packet):
+        
+      for r in route:
+          packet = route + packet
+            
+      return packet
+
+    '''
+    Wrapper for find_path. Fixes max and min latency vars.
+
+    @returns a randomly chosen path.
+    '''
+
+    def calc_route(self, source, dest):
+        # Check if able to calculate route by checking
+        # the status of the peerlist.
+        # if there is no viable connection to the dest
+        # by a peer than we cannot route the packet and 
+        # no route exists.
+        # if so return false
+        if len(self.peers) == 0 or len(self.peerlist) == 0:
+            # logging.debug("No peers cannot calculate route!")
+            # if route cannot be calculated 
+            # packet should not be changed
+            return False
+
+        # get some info from a future traffic function
+        latency = calc_latency()
+        if isinstance(CONFIG['min_latency'], int) and isinstance(CONFIG['max_latency'], int):
+            if CONFIG['min_latency'] > CONFIG['max_latency']:# error perhaps swap max and min values
+                max_latency = CONFIG['min_latency']
+                min_latency = CONFIG['max_latency']
+            else:
+                max_latency = CONFIG['max_latency']
+                min_latency = CONFIG['min_latency']
+        else: pass
+            # Raise error
+
+        # choose a random path from the peers set and return it
+        return self.find_path(max_latency, min_latency, dest)
+
+    def local_packet_handle(self, source, dest, packet):
+      # logging.debug( "Local Packet Found!" )
+      route = self.calc_route(source, dest)
+      if not(route):
+          # no viable route to packet
+          # handle packet directly
+          # do nothing
+          return
+
+      else:
+        packet = self.wrap(route, packet)
+        #next_hop_addr = route[len(route)-1] 
+        make_remote_call(self.sock, d_addr, CONFIG['svpn_port'], tincan_packet, packet)
+        logging.debug( "Local Packet Route Calculated and Sent!" )
+
+      return
+
+    def local_serve(self, sock):
+        # waits for incoming connections
+        # socks, _, _ = select.select( self.local_sock_list, [], [], CONFIG["wait_time"] )
+        # for sock in socks:
+        # logging.debug( "       LOCAL SERVE         " )
+        if sock == self.sock_udp:
+            packet = sock.recvfrom(CONFIG["buf_size"])
+            packet, addr = packet
+            data = packet
+            #parse ethernet header
+            eth_length = 14
+
+            eth_header = packet[:eth_length]
+            eth = unpack('!6s6sH' , eth_header)
+            eth_protocol = socket.ntohs(eth[2])
+
+              #Parse IP packets, IP Protocol number = 8
+            if eth_protocol == 8 :
+              # logging.debug( "       ETH PACKET         " )
+              #Parse IP header
+              #take first 20 characters for the ip header
+              ip_header = packet[eth_length:20+eth_length]
+
+              #now unpack them
+              iph = unpack('!BBHHHBBH4s4s' , ip_header)
+
+              version_ihl = iph[0]
+              version = version_ihl >> 4
+              ihl = version_ihl & 0xF
+
+              iph_length = ihl * 4
+
+              ttl = iph[5]
+              protocol = iph[6]
+              s_addr = socket.inet_ntoa(iph[8]);
+              d_addr = socket.inet_ntoa(iph[9]);
+
+
+              u = iph_length + eth_length
+              icmph_length = 4
+              icmp_header = packet[u:u+4]
+
+              #now unpack them
+              icmph = unpack('!BBH' , icmp_header)
+
+              icmp_type = icmph[0]
+              code = icmph[1]
+              checksum = icmph[2]
+              
+              h_size = eth_length + iph_length + icmph_length
+              data_size = len(packet) - h_size
+
+              #get data from the packet
+              #data = packet[h_size:]
+                
+              # logging.debug("%s", data[0])
+
+              # If this packet's src addr is the same as the
+              # config address then this packet originates
+              # from the local machine. We should introduce
+              # logic to handle the routing of this packet.
+              # logging.debug("s_addr %s, CONFIG[ip4] %s", s_addr, CONFIG["ip4"])
+              if str(s_addr) == CONFIG['ip4']:
+                  self.local_packet_handle(s_addr, d_addr, packet)
+              # else:
+              #   logging.error( "This is NOT a Local Packet!" )
+
+
 
     def serve(self):
         # waits for incoming connections
-        socks, _, _ = select.select( self.sock_list, [], [], CONFIG["wait_time"])        
+        socks, _, _ = select.select( self.sock_list, [], [], CONFIG["wait_time"] )
         for sock in socks:
-            if sock == self.sock_udp: #or sock == self.sock_svr:
+            # logging.debug("CONFIG[ip4] %s", CONFIG["ip4"])
+            if sock == self.sock_udp:
+                self.local_serve(sock)
+                continue
+            elif sock == self.sock or sock == self.sock_svr:
                 
-                packet = sock.recvfrom(CONFIG["buf_size"])
-
-                packet, addr = packet
-          
-                #parse ethernet header
-                eth_length = 14
-                 
-                eth_header = packet[:eth_length]
-                eth = unpack('!6s6sH' , eth_header)
-                eth_protocol = socket.ntohs(eth[2])
-            
-                #Parse IP packets, IP Protocol number = 8
-                if eth_protocol == 8 :
-                    #Parse IP header
-                    #take first 20 characters for the ip header
-                    ip_header = packet[eth_length:20+eth_length]
-
-                    #now unpack them
-                    iph = unpack('!BBHHHBBH4s4s' , ip_header)
-             
-                    version_ihl = iph[0]
-                    version = version_ihl >> 4
-                    ihl = version_ihl & 0xF
-             
-                    iph_length = ihl * 4
-             
-                    ttl = iph[5]
-                    protocol = iph[6]
-                    s_addr = socket.inet_ntoa(iph[8]);
-                    d_addr = socket.inet_ntoa(iph[9]);
-
-
-                    u = iph_length + eth_length
-                    icmph_length = 4
-                    icmp_header = packet[u:u+4]
-         
-                    #now unpack them
-                    icmph = unpack('!BBH' , icmp_header)
-                     
-                    icmp_type = icmph[0]
-                    code = icmph[1]
-                    checksum = icmph[2]
-
-	 	    # If this packet's src addr is the same as the
-	     	    # config address then this packet originates
-		    # from the local machine. We should introduce
-	    	    # logic to handle the routing of this packet.
-                    if(str(s_addr) == CONFIG['ip4']):
-                        logging.debug( "Local Packet Found!" )
-			route = calcRoute(s_addr, d_addr)
-			packet = encapsulate(route, packet)
-			send(packet)
-			logging.debug( "Local Packet Route Calculated and Sent!" )
-			continue
-		    else:
-			logging.error( "This is NOT a Local Packet!" ) 
-			continue
-
-                    h_size = eth_length + iph_length + icmph_length
-                    data_size = len(packet) - h_size
-             
-                    #get data from the packet
-                    data = packet[h_size:]
-
-		else:continue
-
-		#---------------------------------------------------------------
+                #---------------------------------------------------------------
                 #| offset(byte) |                                              |
                 #---------------------------------------------------------------
                 #|      0       | ipop version                                 |
                 #|      1       | message type                                 |
                 #|      2       | Payload (JSON formatted control message)     |
                 #---------------------------------------------------------------
-                
-		if data[0] != ipop_ver :
-                    logging.debug("ipop version mismatch: tincan:{0} controller" )
-                                  ":{1}" "".format(data[0].encode("hex"), \
-                                  ipop_ver.encode("hex")))
+                data, addr = sock.recvfrom(CONFIG["buf_size"])
+                if data[0] != ipop_ver :
+                    logging.debug("ipop version mismatch: tincan:{0} controller" \
+                                    ":{1}" "".format(data[0].encode("hex"), \
+                                    ipop_ver.encode("hex")))
                     sys.exit()
-                if data[1] == tincan_control:
+                elif data[1] == tincan_control:
+                    logging.debug( "        TINCAN CONTROL        " )
                     msg = json.loads(data[2:])
                     logging.debug("recv %s %s" % (addr, data[2:]))
                     msg_type = msg.get("type", None)
-                    
+
                     #ECHO REQUEST MESSAGE
                     if msg_type == "echo_request":
                         make_remote_call(self.sock_svr, m_type=tincan_control,\
                           dest_addr=addr[0], dest_port=addr[1], payload=None,\
                           type="echo_reply")
-                          
+
                     #LOCAL STATE MESSAGE
                     if msg_type == "local_state":
                         self.state = msg
-                    
+
                     #PEER STATE MESSAGE
-                    elif msg_type == "peer_state": 
+                    elif msg_type == "peer_state":
                         if msg["status"] == "offline" or "stats" not in msg:
                             self.peers[msg["uid"]] = msg
                             self.trigger_conn_request(msg)
@@ -304,19 +371,19 @@ class MC2Server(UdpServer):
 
                     # we ignore connection status notification for now
                     elif msg_type == "con_stat": pass
-                    
-                    #CONNECT REQUEST MESSAGE 
-                    elif msg_type == "con_req": 
-                        if CONFIG["on-demand_connection"]: 
+
+                    #CONNECT REQUEST MESSAGE
+                    elif msg_type == "con_req":
+                        if CONFIG["on-demand_connection"]:
                             self.idle_peers[msg["uid"]]=msg
                         else:
-                            if self.check_collision(msg_type,msg["uid"]): 
+                            if self.check_collision(msg_type,msg["uid"]):
                                 continue
                             fpr_len = len(self.state["_fpr"])
                             fpr = msg["data"][:fpr_len]
                             cas = msg["data"][fpr_len + 1:]
                             ip4 = self.uid_ip_table[msg["uid"]]
-                            self.create_connection(msg["uid"], fpr, 1, 
+                            self.create_connection(msg["uid"], fpr, 1,
                                                    CONFIG["sec"], cas, ip4)
                     elif msg_type == "con_resp":
                         if self.check_collision(msg_type, msg["uid"]): continue
@@ -324,21 +391,21 @@ class MC2Server(UdpServer):
                         fpr = msg["data"][:fpr_len]
                         cas = msg["data"][fpr_len + 1:]
                         ip4 = self.uid_ip_table[msg["uid"]]
-                        self.create_connection(msg["uid"], fpr, 1, 
+                        self.create_connection(msg["uid"], fpr, 1,
                                                CONFIG["sec"], cas, ip4)
 
-                    # send message is used as "request for start mutual 
+                    # send message is used as "request for start mutual
                     # connection"
-                    elif msg_type == "send_msg": 
+                    elif msg_type == "send_msg":
                         if CONFIG["on-demand_connection"]:
                             if msg["data"].startswith("destroy"):
                                 do_trim_link(self.sock, msg["uid"])
                             else:
-                                self.ondemand_create_connection(msg["uid"], 
+                                self.ondemand_create_connection(msg["uid"],
                                                                 False)
-                   
-                # If a packet that is destined to yet no p2p connection 
-                # established node, the packet as a whole is forwarded to 
+
+                # If a packet that is destined to yet no p2p connection
+                # established node, the packet as a whole is forwarded to
                 # controller
                 #|-------------------------------------------------------------|
                 #| offset(byte) |                                              |
@@ -350,16 +417,13 @@ class MC2Server(UdpServer):
                 #|     42       | Payload (Ethernet frame)                     |
                 #|-------------------------------------------------------------|
                 elif data[1] == tincan_packet:
-                
-                    src_uid = data[2:22]
-                    dest_uid = data[22:42]
-                    src_mac = data[42:48]
-                    dest_mac = data[58:54]
-
+                    logging.debug( "        TINCAN PACKET 0       " )
                     #Ignore IPv6 packets for log readability. Most of them are 
                     #Multicast DNS packets
                     if data[54:56] == "\x86\xdd":
+                        # logging.debug( "        TINCAN PACKET  1      " )
                         continue
+
                     logging.debug("IP packet forwarded \nversion:{0}\nmsg_type:"
                         "{1}\nsrc_uid:{2}\ndest_uid:{3}\nsrc_mac:{4}\ndst_mac:{"
                         "5}\neth_type:{6}".format(data[0].encode("hex"), \
@@ -368,65 +432,105 @@ class MC2Server(UdpServer):
                         data[48:54].encode("hex"), data[54:56].encode("hex")))
 
                     if data[54:56] == "\x08\x06": #ARP Message
+                        logging.debug( "        TINCAN PACKET  2      " )
                         if CONFIG["switchmode"]:
                             self.arp_handle(data)
                         continue
 
                     if data[54:56] == "\x08\x00": #IPv4 Packet
+                        logging.debug( "        TINCAN PACKET  3      " )
                         if CONFIG["switchmode"]:
-                        
-                            vistited.add(src_uid)
-                            
-                            dest = random.choice(peerlist)
-                            
-                            while dest == self.uid or dest in visited:
-                                dest = random.choice(peerlist)
-                                
-                            #WRAP
-                            tmp_data[0] = ipop_ver
-                            tmp_data[1] = mcvpn_packet
-                            tmp_data[2:22] = self.uid
-                            tmp_data[22:42] = dest
-                            tmp_data[42:48] = mac_a2b(self.state["_mac"]) 
-                            tmp_data[48:54] = mac_a2b(self.peers[dest]["mac"])
-                            tmp_data[54:56] = data[54:56]
-                            tmp_data[56:] = data[42:]
-                            
-                            self.packet_handle(data, mcvpn_packet)
+                            self.packet_handle(data)
                         continue
 
                     if not CONFIG["on-demand_connection"]:
+                        logging.debug( "        TINCAN PACKET  4      " )
                         continue
                     if len(data) < 16:
+                        logging.debug( "        TINCAN PACKET  5      " )
                         continue
+                    logging.debug( "        TINCAN PACKET  6      " )
                     self.create_connection_req(data[2:])
-                    
+
+
+
+                    # src_uid = data[2:22]
+                    # dest_uid = data[22:42]
+                    # src_mac = data[42:48]
+                    # dest_mac = data[58:54]
+
+                    # #Ignore IPv6 packets for log readability. Most of them are
+                    # #Multicast DNS packets
+                    # if data[54:56] == "\x86\xdd":
+                    #     continue
+                    # logging.debug("IP packet forwarded \nversion:{0}\nmsg_type:"
+                    #     "{1}\nsrc_uid:{2}\ndest_uid:{3}\nsrc_mac:{4}\ndst_mac:{"
+                    #     "5}\neth_type:{6}".format(data[0].encode("hex"), \
+                    #     data[1].encode("hex"), data[2:22].encode("hex"), \
+                    #     data[22:42].encode("hex"), data[42:48].encode("hex"),\
+                    #     data[48:54].encode("hex"), data[54:56].encode("hex")))
+
+                    # if data[54:56] == "\x08\x06": #ARP Message
+                    #     if CONFIG["switchmode"]:
+                    #         self.arp_handle(data)
+                    #     continue
+
+                    # if data[54:56] == "\x08\x00": #IPv4 Packet
+                    #     if CONFIG["switchmode"]:
+
+                    #         vistited.add(src_uid)
+
+                    #         dest = random.choice(peerlist)
+
+                    #         while dest == self.uid or dest in visited:
+                    #             dest = random.choice(peerlist)
+
+                    #         #WRAP
+                    #         tmp_data[0] = ipop_ver
+                    #         tmp_data[1] = mcvpn_packet
+                    #         tmp_data[2:22] = self.uid
+                    #         tmp_data[22:42] = dest
+                    #         tmp_data[42:48] = mac_a2b(self.state["_mac"])
+                    #         tmp_data[48:54] = mac_a2b(self.peers[dest]["mac"])
+                    #         tmp_data[54:56] = data[54:56]
+                    #         tmp_data[56:] = data[42:]
+
+                    #         self.packet_handle(data, mcvpn_packet)
+                    #     continue
+
+                    # if not CONFIG["on-demand_connection"]:
+                    #     continue
+                    # if len(data) < 16:
+                    #     continue
+                    # self.create_connection_req(data[2:])
+
                 elif data[1] == mcvpn_packet:
                     continue
                     print "THIS IS AN MCVPN PACKET ",
                     print data
 
                     #AM I HERE?
-                    #if self.uid == dest_uid: 
-                     
-                        
+                    #if self.uid == dest_uid:
+
+
                     #PEEL
                     data = data[42:]
 
-                else: pass
-                    #logging.error("Unknown type message")
-                    #logging.debug("{0}".format(data[0:].encode("hex")))
-                    #sys.exit()
+                else:
+                  # pass
+                  logging.error("Unknown type message")
+                  logging.debug("{0}".format(data[0:].encode("hex")))
+                  sys.exit()
 
             elif sock == self.cc_sock:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 logging.debug("ICC packet received from {0}".format(addr))
                 self.icc_packet_handle(data)
-                
-            #else:
-                #logging.error("Unknown type socket")
-                #sys.exit()
-            '''
+
+            else:
+                logging.error("Unknown type socket")
+                sys.exit()
+
 
     def multihop_server(self, data):
 
@@ -544,26 +648,7 @@ class MC2Server(UdpServer):
             # return False
         return False
 
-    '''
-    Wrapper for find_path. Fixes max and min latency vars.
 
-    @returns a randomly chosen path.
-    '''
-    def calcRoute(self, source, dest):
-        # get some info from a future traffic function
-        latency = calc_latency()
-        if isinstance(CONFIG['min_latency'], int) and isinstance(CONFIG['max_latency'], int):
-            if CONFIG['min_latency'] > CONFIG['max_latency']:# error perhaps swap max and min values
-                max_latency = CONFIG['min_latency']
-                min_latency = CONFIG['max_latency']
-            else:
-                max_latency = CONFIG['max_latency']
-                min_latency = CONFIG['min_latency']
-        else: pass
-            # Raise error
-
-        # choose a random path from the peers set and return it
-        return self.find_path(max_latency, min_latency, dest)
 
     '''
     Generates a new random path from the source (this vm) to the destination vm
@@ -576,19 +661,16 @@ class MC2Server(UdpServer):
     @return the new path paths
     '''
     def find_path(self, max, min, dest):
-    
+        # get required number of hops
+        hop_count = HOP_COUNT
         logging.debug("             FIND PATH                ")
-        
+
         # this line makes it so that our max hop count
         # is no greater than the number of peers in our cloud.
         if hop_count > len(self.peers_ip6):
             hop_count = len(self.peers_ip6)
-        else:
-             # get required number of hops
-            hop_count = HOP_COUNT
 
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
-        
         paths = []
 
         if hop_count == 0:
@@ -596,6 +678,7 @@ class MC2Server(UdpServer):
             if dest in self.peers_ip6:
                 logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
                 paths.append(self.peers_ip6(dest)) # final dest
+                logging.debug( "PATHS = %s",  paths )
                 return paths
 
         # NOTE: RANDOMIZATION ALGORITHM
@@ -646,12 +729,20 @@ def main():
                        CONFIG["xmpp_host"], CONFIG["ip4"], CONFIG["local_uid"])
     last_time = time.time()
     while True:
+        #fork
+        # newpid = os.fork()
+        # if newpid == 0:
+        #     server.local_serve()
+        # else:
         server.serve()
+        
         time_diff = time.time() - last_time
         if time_diff > CONFIG["wait_time"]:
             server.trim_connections()
             do_get_state(server.sock, False)
             last_time = time.time()
+
+        # if raw_input( ) == 'q': break
 
 if __name__ == "__main__":
     main()

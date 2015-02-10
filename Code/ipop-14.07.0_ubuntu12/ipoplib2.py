@@ -25,8 +25,8 @@ CONFIG = {
     #         "stun2.l.google.com:19302", "stun3.l.google.com:19302",
     #         "stun4.l.google.com:19302"],
     "turn": [],  # Contains dicts with "server", "user", "pass" keys
-    "ip4": "172.16.0.1",
     "localhost": "127.0.0.1",
+    "ip4": "", # "172.31.0.103",
     "ip6_prefix": "fd50:0dbc:41f2:4a3c",
     "localhost6": "::1",
     "ip4_mask": 24,
@@ -77,7 +77,7 @@ SOCKET_TYPE6 = socket.SOCK_DGRAM
 SOCKET_FAMILY = socket.AF_INET
 SOCKET_FAMILY6 = socket.AF_INET6
 
-HOP_COUNT = CONFIG['multihop_cl'] -  CONFIG['multihop_ihc']
+HOP_COUNT = CONFIG['multihop_hl'] -  CONFIG['multihop_ihc']
 
 # PKTDUMP mode is for more detailed than debug logging, especially for dump
 # packet contents in hexadecimal to log
@@ -267,8 +267,10 @@ class UdpServer(object):
             sys.exit()
  
         
-        #self.sock_udp.bind(("", 0))
-        self.sock_list = [ self.sock_udp ]
+        self.sock.bind(("", 0))
+
+        #self.local_sock_list = [ self.sock_udp ]
+        self.sock_list = [ self.sock, self.sock_svr, self.sock_udp ]
         self.cc_sock = {}
 	
     def inter_controller_conn(self):
@@ -645,6 +647,7 @@ def parse_config():
         with open(args.config_file) as f:
             loaded_config = json.load(f)
         CONFIG.update(loaded_config)
+        #logging.debug('%s',CONFIG)
 
     need_save = setup_config(CONFIG)
     if need_save and args.config_file and args.update_config:
