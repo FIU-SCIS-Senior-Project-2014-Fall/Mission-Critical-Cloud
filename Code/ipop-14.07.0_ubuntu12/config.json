@@ -1,7 +1,7 @@
 {
-    "xmpp_username": "stack@ejabberd",
+    "xmpp_username": "@ejabberd",
     "xmpp_password": "password",
-    "xmpp_host": "131.94.128.12",
+    "xmpp_host": "131.94.128.21",
     "ip4": "172.31.0.103",
     "ip4_mask": 24,
     "tincan_logging": 0,
