@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from ipoplib2 import *
-from graph_tool.all import *
 import socket
 import fcntl
 import struct
