@@ -267,6 +267,7 @@ class UdpServer(object):
             sys.exit()
  
         
+	self.sock_udp.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
 
         #self.local_sock_list = [ self.sock_udp ]
