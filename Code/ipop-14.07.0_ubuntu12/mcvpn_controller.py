@@ -97,7 +97,7 @@ def parse(packet):
     return parsed_packet
 
   else:
-    logging.debug("Not an Ethernet Packet")
+    # logging.debug("Not an Ethernet Packet")
     return None 
 
 # Calculates the latencies of the edges between the paths by observing network traffic
