@@ -682,17 +682,17 @@ class MC2Server(UdpServer):
 
         # this line makes it so that our max hop count
         # is no greater than the number of peers in our cloud.
-        if hop_count > len(self.peers_ip6):
-            hop_count = len(self.peers_ip6)
+        if hop_count > len(self.peers_ip4):
+            hop_count = len(self.peers_ip4)
 
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
         paths = []
 
         if hop_count == 0:
             # make hop final destination
-            if dest in self.peers_ip6:
+            if dest in self.peers_ip4:
                 logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
-                paths.append(self.peers_ip6(dest)) # final dest
+                paths.append(self.peers_ip4(dest)) # final dest
                 logging.debug( "PATHS = %s",  paths )
                 return paths
 
@@ -717,7 +717,7 @@ class MC2Server(UdpServer):
         # see above is hop_count is greater than peers_ip6
 
         for i in range(0, hop_count):
-            paths.append(random.sample(self.peers_ip6, hop_count))
+            paths.append(random.sample(self.peers_ip4, hop_count))
 
         logging.debug( "PATHS = %s",  paths )
         # make rpc call to send path chosen back to the xmppp server
