@@ -251,7 +251,7 @@ class MC2Server(UdpServer):
     def wrap(self, route, packet):
         
       for r in route:
-          packet = route + packet
+          packet = r + packet
             
       return packet
 
@@ -267,7 +267,7 @@ class MC2Server(UdpServer):
         # no route exists.
         # if so return false
         if len(self.peers) == 0 or len(self.peerlist) == 0:
-            # logging.debug("No peers cannot calculate route!")
+            logging.debug("No peers; cannot calculate route!")
             # if route cannot be calculated 
             # packet should not be changed
             return False
@@ -294,7 +294,7 @@ class MC2Server(UdpServer):
           # no viable route to packet
           # handle packet directly
           # do nothing
-          return
+          return None
 
       else:
         packet = self.wrap(route, packet)
@@ -688,9 +688,8 @@ class MC2Server(UdpServer):
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
         paths = []
 
-        logging.debug ( self.peers_ip4 )
-        logging.debug ( self.peers )
-        logging.debug ( self.peerlist )
+        logging.debug ("Self.Peers = %s", self.peers )
+        logging.debug ( "Self.Peerslist = %s", self.peerlist )
 
 
         if hop_count == 0:
@@ -715,13 +714,15 @@ class MC2Server(UdpServer):
         # |                                                                    n=3^           n=7^               |
         # | One would need to calculate the computational complexity of the random.sample function in Python to  |
         # | determine the feasibility of the above approach. However this is beyond the scope of this project    |
-        # | therefore for the sake of simplicity we shall use hop_count number of random paths.                  |
+        # | therefore for the sake of simplicity we shall use 1 path of hop_count length.                        |
         # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
         # |______________________________________________________________________________________________________|
+
+
         # add hop count random elements from peers set
         # make hop_count random samples of length hop_count
         # and append that set into paths.
-        # see above is hop_count is greater than peers
+        # see above if hop_count is greater than peers
 
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers, hop_count))
