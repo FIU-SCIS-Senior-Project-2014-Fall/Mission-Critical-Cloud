@@ -688,6 +688,11 @@ class MC2Server(UdpServer):
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
         paths = []
 
+        logging.debug ( self.peers_ip4 )
+        logging.debug ( self.peers )
+        logging.debug ( self.peerlist )
+
+        
         if hop_count == 0:
             # make hop final destination
             if dest in self.peers_ip4:
@@ -695,6 +700,7 @@ class MC2Server(UdpServer):
                 paths.append(self.peers_ip4(dest)) # final dest
                 logging.debug( "PATHS = %s",  paths )
                 return paths
+            else return None
 
         # NOTE: RANDOMIZATION ALGORITHM
         # _______________________________________________________________________________________________________
@@ -711,10 +717,10 @@ class MC2Server(UdpServer):
         # | therefore for the sake of simplicity we shall use hop_count number of random paths.                  |
         # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
         # |______________________________________________________________________________________________________|
-        # add hop count random elements from ip6_set
+        # add hop count random elements from ip4_set
         # make hop_count random samples of length hop_count
         # and append that set into paths.
-        # see above is hop_count is greater than peers_ip6
+        # see above is hop_count is greater than peers_ip4
 
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers_ip4, hop_count))
