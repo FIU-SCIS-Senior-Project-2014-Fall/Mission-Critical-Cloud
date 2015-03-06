@@ -691,7 +691,7 @@ class MC2Server(UdpServer):
         logging.debug ("Self.Peers = %s", self.peers )
         logging.debug ( "Self.Peerslist = %s", self.peerlist )
         logging.debug ("Self.peers_ip4 = %s", self.peers_ip4 )
-         logging.debug ("Self.peers_ip6 = %s", self.peers_ip6 )
+        logging.debug ("Self.peers_ip6 = %s", self.peers_ip6 )
 
         if hop_count == 0:
             # make hop final destination
