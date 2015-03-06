@@ -79,8 +79,7 @@ def parse(packet):
 
 
     # build parsed_packet object
-    parsed_packet = 
-    {
+    parsed_packet = {
       "ip_header":ip_header
       ,"ttl":ttl
       ,"protocol":protocol
@@ -98,8 +97,8 @@ def parse(packet):
     return parsed_packet
 
   else:
-    logging_debug("Not an Ethernet Packet")
-    return NULL 
+    logging.debug("Not an Ethernet Packet")
+    return None 
 
 # Calculates the latencies of the edges between the paths by observing network traffic
 # Updates graph edge details in con_graph
@@ -317,7 +316,7 @@ class MC2Server(UdpServer):
               # config address then this packet originates
               # from the local machine. We should introduce
               # logic to handle the routing of this packet.
-              if str(s_addr) == CONFIG['ip4']:
+              if str(parsed_packet["source"]) == CONFIG['ip4']:
                   self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["packet"])
 
 
@@ -720,7 +719,7 @@ class MC2Server(UdpServer):
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers_ip6, hop_count))
 
-       logging.debug( "PATHS = %s",  paths )
+        logging.debug( "PATHS = %s",  paths )
         # make rpc call to send path chosen back to the xmppp server
         # rpc(...)
         return paths
