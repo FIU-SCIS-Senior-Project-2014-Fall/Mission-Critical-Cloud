@@ -692,15 +692,16 @@ class MC2Server(UdpServer):
         logging.debug ( self.peers )
         logging.debug ( self.peerlist )
 
-        
+
         if hop_count == 0:
             # make hop final destination
             if dest in self.peers_ip4:
-                logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
-                paths.append(self.peers_ip4(dest)) # final dest
-                logging.debug( "PATHS = %s",  paths )
-                return paths
-            else return None
+              logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
+              paths.append(self.peers_ip4(dest)) # final dest
+              logging.debug( "PATHS = %s",  paths )
+              return paths
+            else:
+              return None
 
         # NOTE: RANDOMIZATION ALGORITHM
         # _______________________________________________________________________________________________________
