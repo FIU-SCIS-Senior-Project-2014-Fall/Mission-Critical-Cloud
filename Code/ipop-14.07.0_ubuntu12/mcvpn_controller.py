@@ -13,12 +13,10 @@ def eth_addr (a) :
   b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
   return b
 
-'''
-Gets the ip address of the specified interface (e.g. ipop)
-
-@param ifname the name of the interface you want to return
-'''
+# Gets the ip address of the specified interface (e.g. ipop)
+# @param ifname the name of the interface you want to return
 # needs fixing to return ip6
+
 def get_ip_address(ifname):
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   return socket.inet_ntoa(fcntl.ioctl(
@@ -27,10 +25,85 @@ def get_ip_address(ifname):
       struct.pack('256s', ifname[:15])
   )[20:24])
 
-'''
-Calculates the latencies of the edges between the paths by observing network traffic
-Updates graph edge details in con_graph
-'''
+# Helper function to parse ETH_P_ALL packets
+#
+
+def parse(packet):
+  
+  paresed_packet = {}
+  packet, addr = packet
+  data = packet
+
+  #parse ethernet header
+  eth_length = 14
+
+  eth_header = packet[:eth_length]
+  eth = unpack('!6s6sH' , eth_header)
+  eth_protocol = socket.ntohs(eth[2])
+
+  #Parse IP packets, IP Protocol number = 8
+  if eth_protocol == 8 :
+    #Parse IP header
+    #take first 20 characters for the ip header
+    ip_header = packet[eth_length:20+eth_length]
+
+    #now unpack them
+    iph = unpack('!BBHHHBBH4s4s' , ip_header)
+
+    version_ihl = iph[0]
+    version = version_ihl >> 4
+    ihl = version_ihl & 0xF
+
+    iph_length = ihl * 4
+
+    ttl = iph[5]
+    protocol = iph[6]
+    s_addr = socket.inet_ntoa(iph[8]);
+    d_addr = socket.inet_ntoa(iph[9]);
+
+    u = iph_length + eth_length
+    icmph_length = 4
+    icmp_header = packet[u:u+4]
+
+    #now unpack them
+    icmph = unpack('!BBH' , icmp_header)
+
+    icmp_type = icmph[0]
+    code = icmph[1]
+    checksum = icmph[2]
+
+    h_size = eth_length + iph_length + icmph_length
+    data_size = len(packet) - h_size
+    #get data from the packet
+    #data = packet[h_size:]
+
+
+    # build parsed_packet object
+    parsed_packet = 
+    {
+      "ip_header":ip_header
+      ,"ttl":ttl
+      ,"protocol":protocol
+      ,"source":s_addr
+      ,"dest":d_addr
+      ,"icmp_header":icmp_header
+      ,"icmp_type":icmp_type
+      ,"code":code
+      ,"checksum":checksum
+      ,"h_size":h_size
+      ,"data_size":data_size
+      ,"data":packet
+      ,"addr":addr
+    }
+    return parsed_packet
+
+  else:
+    logging_debug("Not an Ethernet Packet")
+    return NULL 
+
+# Calculates the latencies of the edges between the paths by observing network traffic
+# Updates graph edge details in con_graph
+
 def calc_latency(): pass
 
 class MC2Server(UdpServer):
@@ -183,11 +256,9 @@ class MC2Server(UdpServer):
             
       return packet
 
-    '''
-    Wrapper for find_path. Fixes max and min latency vars.
-
-    @returns a randomly chosen path.
-    '''
+    
+    # Wrapper for find_path. Fixes max and min latency vars.
+    # @returns a randomly chosen path.
 
     def calc_route(self, source, dest):
         # Check if able to calculate route by checking
@@ -236,70 +307,18 @@ class MC2Server(UdpServer):
 
     def local_serve(self, sock):
         # waits for incoming connections
-        # socks, _, _ = select.select( self.local_sock_list, [], [], CONFIG["wait_time"] )
-        # for sock in socks:
         # logging.debug( "       LOCAL SERVE         " )
         if sock == self.sock_udp:
             packet = sock.recvfrom(CONFIG["buf_size"])
-            packet, addr = packet
-            data = packet
-            #parse ethernet header
-            eth_length = 14
+            parsed_packet = parse(packet)
 
-            eth_header = packet[:eth_length]
-            eth = unpack('!6s6sH' , eth_header)
-            eth_protocol = socket.ntohs(eth[2])
-
-              #Parse IP packets, IP Protocol number = 8
-            if eth_protocol == 8 :
-              # logging.debug( "       ETH PACKET         " )
-              #Parse IP header
-              #take first 20 characters for the ip header
-              ip_header = packet[eth_length:20+eth_length]
-
-              #now unpack them
-              iph = unpack('!BBHHHBBH4s4s' , ip_header)
-
-              version_ihl = iph[0]
-              version = version_ihl >> 4
-              ihl = version_ihl & 0xF
-
-              iph_length = ihl * 4
-
-              ttl = iph[5]
-              protocol = iph[6]
-              s_addr = socket.inet_ntoa(iph[8]);
-              d_addr = socket.inet_ntoa(iph[9]);
-
-
-              u = iph_length + eth_length
-              icmph_length = 4
-              icmp_header = packet[u:u+4]
-
-              #now unpack them
-              icmph = unpack('!BBH' , icmp_header)
-
-              icmp_type = icmph[0]
-              code = icmph[1]
-              checksum = icmph[2]
-              
-              h_size = eth_length + iph_length + icmph_length
-              data_size = len(packet) - h_size
-
-              #get data from the packet
-              #data = packet[h_size:]
-                
-              # logging.debug("%s", data[0])
-
+            if(parsed_packet):
               # If this packet's src addr is the same as the
               # config address then this packet originates
               # from the local machine. We should introduce
               # logic to handle the routing of this packet.
-              # logging.debug("s_addr %s, CONFIG[ip4] %s", s_addr, CONFIG["ip4"])
               if str(s_addr) == CONFIG['ip4']:
-                  self.local_packet_handle(s_addr, d_addr, packet)
-              # else:
-              #   logging.error( "This is NOT a Local Packet!" )
+                  self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["packet"])
 
 
 
@@ -313,13 +332,13 @@ class MC2Server(UdpServer):
                 continue
             elif sock == self.sock or sock == self.sock_svr:
                 
-                #---------------------------------------------------------------
-                #| offset(byte) |                                              |
-                #---------------------------------------------------------------
-                #|      0       | ipop version                                 |
-                #|      1       | message type                                 |
-                #|      2       | Payload (JSON formatted control message)     |
-                #---------------------------------------------------------------
+                # ---------------------------------------------------------------
+                # | offset(byte) |                                              |
+                # ---------------------------------------------------------------
+                # |      0       | ipop version                                 |
+                # |      1       | message type                                 |
+                # |      2       | Payload (JSON formatted control message)     |
+                # ---------------------------------------------------------------
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 if data[0] != ipop_ver :
                     logging.debug("ipop version mismatch: tincan:{0} controller" \
@@ -647,18 +666,16 @@ class MC2Server(UdpServer):
             # return False
         return False
 
-
-
-    '''
-    Generates a new random path from the source (this vm) to the destination vm
-    within the required latency bounds
-
-    @param max The maximum allowed latency
-    @param min The minimum allowed latency
-    @param dest The destination vm
-
-    @return the new path paths
-    '''
+    
+    # Generates a new random path from the source (this vm) to the destination vm
+    # within the required latency bounds
+    #
+    # @param max The maximum allowed latency
+    # @param min The minimum allowed latency
+    # @param dest The destination vm
+    #
+    # @return the new path paths
+    
     def find_path(self, max, min, dest):
         # get required number of hops
         hop_count = HOP_COUNT
@@ -703,21 +720,7 @@ class MC2Server(UdpServer):
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers_ip6, hop_count))
 
-        # choose a set of random vertices equal to the hop_count
-        '''
-        This section is for illustrative purposes
-        v = g.vertex(randint(0, g.num_vertices()))
-        for i in range(1,hop_count-1):
-            new_v = con_graph.vertex(randint(0, con_graph.num_vertices()))
-            total_latency += edge_latency[con_graph.edge(0,new_v)]
-            while path.contains(new_v) || total_latency > max:
-                total_latency -= edge_latency[con_graph.edge(0,new_v)]
-                new_v = con_graph.vertex(randint(0, con_graph.num_vertices()))
-                total_latency += edge_latency[con_graph.edge(0,new_v)
-            path.append(new_v)
-        path.append(dest)
-        '''
-        logging.debug( "PATHS = %s",  paths )
+       logging.debug( "PATHS = %s",  paths )
         # make rpc call to send path chosen back to the xmppp server
         # rpc(...)
         return paths

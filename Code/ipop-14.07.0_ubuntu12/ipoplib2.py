@@ -20,7 +20,7 @@ import sys
 
 # Set default config values
 CONFIG = {
-    "stun": ["131.94.128.12:3478"],
+    "stun": ["131.94.128.21:3478"],
     #"stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
     #         "stun2.l.google.com:19302", "stun3.l.google.com:19302",
     #         "stun4.l.google.com:19302"],
@@ -266,8 +266,6 @@ class UdpServer(object):
             logging.debug( 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1] )
             sys.exit()
  
-        
-	self.sock_udp.bind((CONFIG["localhost"], CONFIG["contr_port"]))
         self.sock.bind(("", 0))
 
         #self.local_sock_list = [ self.sock_udp ]
