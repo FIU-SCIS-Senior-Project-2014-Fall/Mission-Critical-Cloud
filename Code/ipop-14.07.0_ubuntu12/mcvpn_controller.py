@@ -317,7 +317,7 @@ class MC2Server(UdpServer):
               # from the local machine. We should introduce
               # logic to handle the routing of this packet.
               if str(parsed_packet["source"]) == CONFIG['ip4']:
-                  self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["packet"])
+                  self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["data"])
 
 
 
