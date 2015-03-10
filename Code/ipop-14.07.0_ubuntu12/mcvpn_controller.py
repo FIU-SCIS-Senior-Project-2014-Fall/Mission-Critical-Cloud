@@ -314,9 +314,9 @@ class MC2Server(UdpServer):
         # see above if hop_count is greater than peers
         logging.debug(self.peers[guest_uid])
 
-        #if dest in self.peers && self.peers(dest).status == 'online'
-        for i in range(0, hop_count):
-            paths.append(random.sample(self.peers, hop_count))
+        if dest in self.peers && self.peers[guest_uid]['status'] == 'online':
+          for i in range(0, hop_count):
+              paths.append(random.sample(self.peers, hop_count))
 
         logging.debug( "PATHS = %s",  paths )
         # make rpc call to send path chosen back to the xmppp server
