@@ -247,6 +247,24 @@ class MC2Server(UdpServer):
             # the source or dest.
             # set this in the far peers table
         logging.debug("%s", self.peers)
+
+
+    def multicast(self, packet):
+
+      if CONFIG['mcc_type'] == 1:
+        logging.debug("MCC Type is not multicast; This should not happen")
+        logging.debug("Failure Exiting...")
+        sys.exit()
+
+      dest = None
+
+      for f in range(0, CONFIG['mcc_forwards']):
+        while dest == None and self.peers not = [] and self.peers[dest]['status'] not = 'offline':
+          dest = self.peers[random.sample(self.peers, 1)]
+          logging.debug("DEST = %s", dest)
+          make_remote_call(self.sock, dest, CONFIG['svpn_port'], tincan_packet, packet)
+          
+        
     
     def wrap(self, route, packet):
         
@@ -368,6 +386,9 @@ class MC2Server(UdpServer):
 
       else:
         logging.debug("route = %s", route)
+        if CONFIG['mcc_type'] == 0:
+          return self.multicast(packet)
+        
         packet = self.wrap(route, packet)
         #next_hop_addr = route[len(route)-1] 
         make_remote_call(self.sock, d_addr, CONFIG['svpn_port'], tincan_packet, packet)

@@ -56,7 +56,9 @@ CONFIG = {
     "multihop_sr": True, # Multihop source route
     "recalc_time": 30,
     "min_latency": 0,
-    "max_latency": 1
+    "max_latency": 1,
+    "mcc_type": 0, # 0 Specifies multi-cast, 1 specifies encapsulation
+    "mcc_forwards": 5 # number of random forwards for mcc_type 0
 }
 
 
