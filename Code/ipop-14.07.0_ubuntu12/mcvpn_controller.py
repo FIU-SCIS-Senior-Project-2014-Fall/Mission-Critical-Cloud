@@ -316,6 +316,7 @@ class MC2Server(UdpServer):
 
         if dest in self.peers and self.peers[guest_uid]['status'] == 'online':
           for i in range(0, hop_count):
+              logging.debug(random.sample(self.peers, hop_count))
               paths.append(random.sample(self.peers, hop_count))
 
         logging.debug( "PATHS = %s",  paths )
