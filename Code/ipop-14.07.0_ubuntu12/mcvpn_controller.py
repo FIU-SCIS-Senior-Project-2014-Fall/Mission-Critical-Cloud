@@ -297,6 +297,7 @@ class MC2Server(UdpServer):
           return None
 
       else:
+        logging.debug("route = %s", route)
         packet = self.wrap(route, packet)
         #next_hop_addr = route[len(route)-1] 
         make_remote_call(self.sock, d_addr, CONFIG['svpn_port'], tincan_packet, packet)
