@@ -277,14 +277,15 @@ class MC2Server(UdpServer):
         logging.debug ( "               HOP_COUNT = %s              ", hop_count )
         paths = []
 
+        guest_uid = gen_uid(dest)
         logging.debug ("Self.Peers = %s", self.peers )
-        logging.debug(self.peers[dest])
+        logging.debug ( "Self.Peerslist = %s", self.peerlist )
 
         if hop_count == 0:
             # make hop final destination
             if dest in self.peers:
               logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
-              paths.append(self.peers(dest)) # final dest
+              paths.append(self.peers[guest_uid]) # final dest
               logging.debug( "PATHS = %s",  paths )
               return paths
             else:
@@ -311,7 +312,8 @@ class MC2Server(UdpServer):
         # make hop_count random samples of length hop_count
         # and append that set into paths.
         # see above if hop_count is greater than peers
-        
+        logging.debug(self.peers[guest_uid])
+
         #if dest in self.peers && self.peers(dest).status == 'online'
         for i in range(0, hop_count):
             paths.append(random.sample(self.peers, hop_count))
