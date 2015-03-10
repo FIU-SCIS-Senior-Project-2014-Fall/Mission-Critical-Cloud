@@ -377,7 +377,7 @@ class MC2Server(UdpServer):
 
     def local_serve(self, sock):
         # waits for incoming connections
-        # logging.debug( "       LOCAL SERVE         " )
+        logging.debug( "       LOCAL SERVE         " )
         if sock == self.sock_udp:
             packet = sock.recvfrom(CONFIG["buf_size"])
             parsed_packet = parse(packet)
@@ -530,6 +530,12 @@ class MC2Server(UdpServer):
                         if CONFIG["switchmode"]:
                             self.packet_handle(data)
                         continue
+
+
+
+
+
+
 
                     if not CONFIG["on-demand_connection"]:
                         logging.debug( "        TINCAN PACKET  4      " )

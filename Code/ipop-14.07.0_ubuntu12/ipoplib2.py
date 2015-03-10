@@ -37,7 +37,7 @@ CONFIG = {
     "local_uid": "",
     "uid_size": 40,
     "sec": True,
-    "wait_time": 15,
+    "wait_time": 5,
     "buf_size": 65565,
     "router_mode": False,
     "on-demand_connection" : False,
