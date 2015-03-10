@@ -255,6 +255,76 @@ class MC2Server(UdpServer):
             
       return packet
 
+    # Generates a new random path from the source (this vm) to the destination vm
+    # within the required latency bounds
+    #
+    # @param max The maximum allowed latency
+    # @param min The minimum allowed latency
+    # @param dest The destination vm
+    #
+    # @return the new path paths
+    
+    def find_path(self, max, min, dest):
+        # get required number of hops
+        hop_count = HOP_COUNT
+        logging.debug("             FIND PATH                ")
+
+        # this line makes it so that our max hop count
+        # is no greater than the number of peers in our cloud.
+        if hop_count > len(self.peers):
+            hop_count = len(self.peers)
+
+        logging.debug ( "               HOP_COUNT = %s              ", hop_count )
+        paths = []
+
+        logging.debug ("Self.Peers = %s", self.peers )
+        logging.debug ( "Self.Peerslist = %s", self.peerlist )
+        logging.debug ("Self.peers_ip4 = %s", self.peers_ip4 )
+        logging.debug ("Self.peers_ip6 = %s", self.peers_ip6 )
+
+        if hop_count == 0:
+            # make hop final destination
+            if dest in self.peers:
+              logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
+              paths.append(self.peers(dest)) # final dest
+              logging.debug( "PATHS = %s",  paths )
+              return paths
+            else:
+              return None
+
+        # NOTE: RANDOMIZATION ALGORITHM
+        # _______________________________________________________________________________________________________
+        # | Now the question becomes how many paths do we want to generate?                                      |
+        # | Ideally we would want to generate ALL possible paths present in our network from source              |
+        # | to destination. In order to do this we would need to introduce the incomplete gamma function         |
+        # | Let P_n (p sub n) be the total number of paths from source u to destination v and the remainder      |
+        # | of the graph be w. Then P_n = e(n-3)2G(n-3, 1)+n-2, where e is the base of the natural logarithm.    |
+        # |                                                                                                      |
+        # | This is all good, however the sequence explodes from after n = 7 i.e. 1, 3, 11, 49, 261, 1631, ...   |
+        # |                                                                    n=3^           n=7^               |
+        # | One would need to calculate the computational complexity of the random.sample function in Python to  |
+        # | determine the feasibility of the above approach. However this is beyond the scope of this project    |
+        # | therefore for the sake of simplicity we shall use 1 path of hop_count length.                        |
+        # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
+        # |______________________________________________________________________________________________________|
+
+
+        # add hop count random elements from peers set
+        # make hop_count random samples of length hop_count
+        # and append that set into paths.
+        # see above if hop_count is greater than peers
+        logging.debug(self.peers(dest).status)
+
+        #if dest in self.peers && self.peers(dest).status == 'online'
+        for i in range(0, hop_count):
+            paths.append(random.sample(self.peers, hop_count))
+
+        logging.debug( "PATHS = %s",  paths )
+        # make rpc call to send path chosen back to the xmppp server
+        # rpc(...)
+        return paths
+
+
     
     # Wrapper for find_path. Fixes max and min latency vars.
     # @returns a randomly chosen path.
@@ -667,73 +737,7 @@ class MC2Server(UdpServer):
         return False
 
     
-    # Generates a new random path from the source (this vm) to the destination vm
-    # within the required latency bounds
-    #
-    # @param max The maximum allowed latency
-    # @param min The minimum allowed latency
-    # @param dest The destination vm
-    #
-    # @return the new path paths
     
-    def find_path(self, max, min, dest):
-        # get required number of hops
-        hop_count = HOP_COUNT
-        logging.debug("             FIND PATH                ")
-
-        # this line makes it so that our max hop count
-        # is no greater than the number of peers in our cloud.
-        if hop_count > len(self.peers):
-            hop_count = len(self.peers)
-
-        logging.debug ( "               HOP_COUNT = %s              ", hop_count )
-        paths = []
-
-        logging.debug ("Self.Peers = %s", self.peers )
-        logging.debug ( "Self.Peerslist = %s", self.peerlist )
-        logging.debug ("Self.peers_ip4 = %s", self.peers_ip4 )
-        logging.debug ("Self.peers_ip6 = %s", self.peers_ip6 )
-
-        if hop_count == 0:
-            # make hop final destination
-            if dest in self.peers:
-              logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
-              paths.append(self.peers(dest)) # final dest
-              logging.debug( "PATHS = %s",  paths )
-              return paths
-            else:
-              return None
-
-        # NOTE: RANDOMIZATION ALGORITHM
-        # _______________________________________________________________________________________________________
-        # | Now the question becomes how many paths do we want to generate?                                      |
-        # | Ideally we would want to generate ALL possible paths present in our network from source              |
-        # | to destination. In order to do this we would need to introduce the incomplete gamma function         |
-        # | Let P_n (p sub n) be the total number of paths from source u to destination v and the remainder      |
-        # | of the graph be w. Then P_n = e(n-3)2G(n-3, 1)+n-2, where e is the base of the natural logarithm.    |
-        # |                                                                                                      |
-        # | This is all good, however the sequence explodes from after n = 7 i.e. 1, 3, 11, 49, 261, 1631, ...   |
-        # |                                                                    n=3^           n=7^               |
-        # | One would need to calculate the computational complexity of the random.sample function in Python to  |
-        # | determine the feasibility of the above approach. However this is beyond the scope of this project    |
-        # | therefore for the sake of simplicity we shall use 1 path of hop_count length.                        |
-        # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
-        # |______________________________________________________________________________________________________|
-
-
-        # add hop count random elements from peers set
-        # make hop_count random samples of length hop_count
-        # and append that set into paths.
-        # see above if hop_count is greater than peers
-
-        for i in range(0, hop_count):
-            paths.append(random.sample(self.peers, hop_count))
-
-        logging.debug( "PATHS = %s",  paths )
-        # make rpc call to send path chosen back to the xmppp server
-        # rpc(...)
-        return paths
-
 def main():
     parse_config()
     server = MC2Server(CONFIG["xmpp_username"], CONFIG["xmpp_password"],
