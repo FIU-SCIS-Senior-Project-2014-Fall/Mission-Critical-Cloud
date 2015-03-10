@@ -71,6 +71,8 @@ null_uid += "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 bc_mac = "\xff\xff\xff\xff\xff\xff"
 null_mac = "\x00\x00\x00\x00\x00\x00"
 
+control_packet_types = { ipop_ver, tincan_control }
+
 SOCKET_TYPE = socket.SOCK_DGRAM
 SOCKET_TYPE6 = socket.SOCK_DGRAM
 
@@ -446,7 +448,7 @@ class UdpServer(object):
                   via=[self.state["_ip6"], v["ip6"]], ttl=ttl)
 
     def lookup(self, dest_ip6):
-	logging.pktdump("Lookup: {0} pending lookup:{1}".format(dest_ip6, self.lookup_req))
+	    logging.pktdump("Lookup: {0} pending lookup:{1}".format(dest_ip6, self.lookup_req))
         if dest_ip6 in self.lookup_req:
             return
         # If no response from the lookup_request message at a certain time. Cancel the 

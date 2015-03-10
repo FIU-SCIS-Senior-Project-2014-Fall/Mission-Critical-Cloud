@@ -382,7 +382,7 @@ class MC2Server(UdpServer):
             packet = sock.recvfrom(CONFIG["buf_size"])
             parsed_packet = parse(packet)
 
-            if(parsed_packet):
+            if(parsed_packet and parsed_packet['data'][0] not in control_packet_types):
               # If this packet's src addr is the same as the
               # config address then this packet originates
               # from the local machine. We should introduce
@@ -528,6 +528,7 @@ class MC2Server(UdpServer):
                     if data[54:56] == "\x08\x00": #IPv4 Packet
                         logging.debug( "        TINCAN PACKET  3      " )
                         if CONFIG["switchmode"]:
+                            logging.debug("Sending to self.packet_handle(data)")
                             self.packet_handle(data)
                         continue
 

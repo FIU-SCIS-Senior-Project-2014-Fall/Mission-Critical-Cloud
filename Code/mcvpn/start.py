@@ -17,7 +17,7 @@ CONFIG = {
     "hostname":"ejabberd",
     "group":"mcvpn",
     "password":"password",
-    "host":"131.94.128.12"
+    "host":"131.94.128.21"
 }
 
 '''
@@ -34,9 +34,8 @@ def vm_list():
 '''
 Installs ejabberd and starts the service
 
-
 '''
-def _start(self):
+def _ejabberd_start(self):
     subprocess.Popen(["service", "ejabberd", "restart"])
 
 def _install(self):
@@ -61,7 +60,7 @@ def _install(self):
 
 def main(self):
     _install()
-    _start()
+    _ejabberd_start()
     xmpp = XmppServer(host=CONFIG['host'], username=CONFIG['username'], \
         password=CONFIG['password'])
     logging.debug("XMPP SERVER STARTED "),
