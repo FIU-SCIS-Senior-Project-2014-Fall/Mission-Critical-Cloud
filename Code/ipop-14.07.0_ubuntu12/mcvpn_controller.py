@@ -259,7 +259,7 @@ class MC2Server(UdpServer):
       dest = None
 
       for f in range(0, CONFIG['mcc_forwards']):
-        while dest == None and self.peers != [] and self.peers[dest]['status'] != 'offline':
+        while self.peers != [] and self.peers[dest]['status'] != 'offline':
           dest = self.peers[random.sample(self.peers, 1)]
           logging.debug("DEST = %s", dest)
           make_remote_call(self.sock, dest, CONFIG['svpn_port'], tincan_packet, packet)
