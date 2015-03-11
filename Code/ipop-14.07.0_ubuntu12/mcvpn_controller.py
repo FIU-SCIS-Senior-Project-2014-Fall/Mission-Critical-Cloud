@@ -256,9 +256,11 @@ class MC2Server(UdpServer):
         logging.debug("Failure Exiting...")
         sys.exit()
 
+      # DEST CANNOT BE NULL
       dest = None
 
       for f in range(0, CONFIG['mcc_forwards']):
+                                   # DEST IS NULL HERE
         while self.peers != [] and self.peers[dest]['status'] != 'offline':
           dest = self.peers[random.sample(self.peers, 1)]
           logging.debug("DEST = %s", dest)
