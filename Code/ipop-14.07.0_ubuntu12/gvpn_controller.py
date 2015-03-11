@@ -108,149 +108,150 @@ class GvpnUdpServer(UdpServer):
         socks, _, _ = select.select(self.sock_list, [], [], CONFIG["wait_time"])
         for sock in socks:
             if sock == self.sock or sock == self.sock_svr:
-            #---------------------------------------------------------------
-            #| offset(byte) | |
-            #---------------------------------------------------------------
-            #| 0 | ipop version |
-            #| 1 | message type |
-            #| 2 | Payload (JSON formatted control message) |
-            #---------------------------------------------------------------
-            data, addr = sock.recvfrom(CONFIG["buf_size"])
-            if data[0] != ipop_ver:
-                logging.debug("ipop version mismatch: tincan:{0} controller"
-                              ":{1}" "".format(data[0].encode("hex"), \
-                              ipop_ver.encode("hex")))
-                sys.exit()
-            if data[1] == tincan_control:
-                msg = json.loads(data[2:])
-                logging.debug("recv %s %s" % (addr, data[2:]))
-                msg_type = msg.get("type", None)
-                if msg_type == "echo_request":
-                    make_remote_call(self.sock_svr, m_type=tincan_control,\
-                        dest_addr=addr[0], dest_port=addr[1], payload=None,\
-                        type="echo_reply")
-                if msg_type == "local_state":
-                    self.ipop_state = msg
-                elif msg_type == "peer_state":
-                    if msg["status"] == "offline" or "stats" not in msg:
-                        self.peers[msg["uid"]] = msg
-                        self.trigger_conn_request(msg)
-                        continue
-                    stats = msg["stats"]
-                    total_byte = 0
-                    for stat in stats:
-                        total_byte += stat["sent_total_bytes"]
-                        total_byte += stat["recv_total_bytes"]
-                    msg["total_byte"]=total_byte
-                    logging.debug("self.peers:{0}".format(self.peers))
-                    if not msg["uid"] in self.peers:
-                        msg["last_active"]=time.time()
-                    elif not "total_byte" in self.peers[msg["uid"]]:
-                        msg["last_active"]=time.time()
-                    else:
-                        if msg["total_byte"] > \
-                                        self.peers[msg["uid"]]["total_byte"]:
+                #---------------------------------------------------------------
+                #| offset(byte) | |
+                #---------------------------------------------------------------
+                #| 0 | ipop version |
+                #| 1 | message type |
+                #| 2 | Payload (JSON formatted control message) |
+                #---------------------------------------------------------------
+                data, addr = sock.recvfrom(CONFIG["buf_size"])
+                if data[0] != ipop_ver:
+                    logging.debug("ipop version mismatch: tincan:{0} controller"
+                                  ":{1}" "".format(data[0].encode("hex"), \
+                                  ipop_ver.encode("hex")))
+                    sys.exit()
+                if data[1] == tincan_control:
+                    msg = json.loads(data[2:])
+                    logging.debug("recv %s %s" % (addr, data[2:]))
+                    msg_type = msg.get("type", None)
+                    if msg_type == "echo_request":
+                        make_remote_call(self.sock_svr, m_type=tincan_control,\
+                            dest_addr=addr[0], dest_port=addr[1], payload=None,\
+                            type="echo_reply")
+                    if msg_type == "local_state":
+                        self.ipop_state = msg
+                    elif msg_type == "peer_state":
+                        if msg["status"] == "offline" or "stats" not in msg:
+                            self.peers[msg["uid"]] = msg
+                            self.trigger_conn_request(msg)
+                            continue
+                        stats = msg["stats"]
+                        total_byte = 0
+                        for stat in stats:
+                            total_byte += stat["sent_total_bytes"]
+                            total_byte += stat["recv_total_bytes"]
+                        msg["total_byte"]=total_byte
+                        logging.debug("self.peers:{0}".format(self.peers))
+                        if not msg["uid"] in self.peers:
+                            msg["last_active"]=time.time()
+                        elif not "total_byte" in self.peers[msg["uid"]]:
                             msg["last_active"]=time.time()
                         else:
-                            msg["last_active"]=\
-                                        self.peers[msg["uid"]]["last_active"]
-                    self.peers[msg["uid"]] = msg
-                
-                # we ignore connection status notification for now
-                elif msg_type == "con_stat": pass
-                elif msg_type == "con_req":
-                    if CONFIG["on-demand_connection"]:
-                        self.idle_peers[msg["uid"]]=msg
-                    else:
-                        if self.check_collision(msg_type,msg["uid"]):
-                            continue
-                    fpr_len = len(self.ipop_state["_fpr"])
-                    fpr = msg["data"][:fpr_len]
-                    cas = msg["data"][fpr_len + 1:]
-                    ip4 = self.uid_ip_table[msg["uid"]]
-                    self.create_connection(msg["uid"], fpr, 1,
-                                            CONFIG["sec"], cas, ip4)
-
-                elif msg_type == "con_resp":
-                    if self.check_collision(msg_type, msg["uid"]): continue
-                    fpr_len = len(self.ipop_state["_fpr"])
-                    fpr = msg["data"][:fpr_len]
-                    cas = msg["data"][fpr_len + 1:]
-                    ip4 = self.uid_ip_table[msg["uid"]]
-                    self.create_connection(msg["uid"], fpr, 1,
-                                        CONFIG["sec"], cas, ip4)
-                # send message is used as "request for start mutual
-                # connection"
-                elif msg_type == "send_msg":
-                    if CONFIG["on-demand_connection"]:
-                        if msg["data"].startswith("destroy"):
-                            do_trim_link(self.sock, msg["uid"])
+                            if msg["total_byte"] > \
+                                            self.peers[msg["uid"]]["total_byte"]:
+                                msg["last_active"]=time.time()
+                            else:
+                                msg["last_active"]=\
+                                            self.peers[msg["uid"]]["last_active"]
+                        self.peers[msg["uid"]] = msg
+                    
+                    # we ignore connection status notification for now
+                    elif msg_type == "con_stat": pass
+                    elif msg_type == "con_req":
+                        if CONFIG["on-demand_connection"]:
+                            self.idle_peers[msg["uid"]]=msg
                         else:
-                            self.ondemand_create_connection(msg["uid"],
-                                                            False)
+                            if self.check_collision(msg_type,msg["uid"]):
+                                continue
+                        fpr_len = len(self.ipop_state["_fpr"])
+                        fpr = msg["data"][:fpr_len]
+                        cas = msg["data"][fpr_len + 1:]
+                        ip4 = self.uid_ip_table[msg["uid"]]
+                        self.create_connection(msg["uid"], fpr, 1,
+                                                CONFIG["sec"], cas, ip4)
 
-            # If a packet that is destined to yet no p2p connection
-            # established node, the packet as a whole is forwarded to
-            # controller
-            #|-------------------------------------------------------------|
-            #| offset(byte) | |
-            #|-------------------------------------------------------------|
-            #| 0 | ipop version |
-            #| 1 | message type |
-            #| 2 | source uid |
-            #| 22 | destination uid |
-            #| 42 | Payload (Ethernet frame) |
-            #|-------------------------------------------------------------|
-            elif data[1] == tincan_packet:
-                # For Francois
-                # --------------------------------------------------------
-                if data[54:56] == "\x08\x00":
-                    logging.debug("IPv4 Packet is forwarded")
-                    dump(data)
-                    msg = data[2:]
-                    dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
-                    send_packet_to_remote(self.cc_sock, msg, dest)
-                    continue
-                # ----------------------------------------For Francois----
+                    elif msg_type == "con_resp":
+                        if self.check_collision(msg_type, msg["uid"]): continue
+                        fpr_len = len(self.ipop_state["_fpr"])
+                        fpr = msg["data"][:fpr_len]
+                        cas = msg["data"][fpr_len + 1:]
+                        ip4 = self.uid_ip_table[msg["uid"]]
+                        self.create_connection(msg["uid"], fpr, 1,
+                                            CONFIG["sec"], cas, ip4)
+                    # send message is used as "request for start mutual
+                    # connection"
+                    elif msg_type == "send_msg":
+                        if CONFIG["on-demand_connection"]:
+                            if msg["data"].startswith("destroy"):
+                                do_trim_link(self.sock, msg["uid"])
+                            else:
+                                self.ondemand_create_connection(msg["uid"],
+                                                                False)
 
-                # Ignore IPv6 packets for log readability. Most of them are
-                # Multicast DNS packets
-                if data[54:56] == "\x86\xdd":
-                    continue
-                logging.debug("IP packet forwarded \nversion:{0}\nmsg_type:"
-                    "{1}\nsrc_uid:{2}\ndest_uid:{3}\nsrc_mac:{4}\ndst_mac:{"
-                    "5}\neth_type:{6}".format(data[0].encode("hex"), \
-                    data[1].encode("hex"), data[2:22].encode("hex"), \
-                    data[22:42].encode("hex"), data[42:48].encode("hex"),\
-                    data[48:54].encode("hex"), data[54:56].encode("hex")))
+                # If a packet that is destined to yet no p2p connection
+                # established node, the packet as a whole is forwarded to
+                # controller
+                #|-------------------------------------------------------------|
+                #| offset(byte) | |
+                #|-------------------------------------------------------------|
+                #| 0 | ipop version |
+                #| 1 | message type |
+                #| 2 | source uid |
+                #| 22 | destination uid |
+                #| 42 | Payload (Ethernet frame) |
+                #|-------------------------------------------------------------|
+                elif data[1] == tincan_packet:
+                    # For Francois
+                    # --------------------------------------------------------
+                    if data[54:56] == "\x08\x00":
+                        logging.debug("IPv4 Packet is forwarded")
+                        dump(data)
+                        msg = data[2:]
+                        dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
+                        send_packet_to_remote(self.cc_sock, msg, dest)
+                        continue
+                    # ----------------------------------------For Francois----
 
-                if not CONFIG["on-demand_connection"]:
-                    continue
-                if len(data) < 16:
-                    continue
-                self.create_connection_req(data[2:])
+                    # Ignore IPv6 packets for log readability. Most of them are
+                    # Multicast DNS packets
+                    if data[54:56] == "\x86\xdd":
+                        continue
+                    
+                    logging.debug("IP packet forwarded \nversion:{0}\nmsg_type:"
+                        "{1}\nsrc_uid:{2}\ndest_uid:{3}\nsrc_mac:{4}\ndst_mac:{"
+                        "5}\neth_type:{6}".format(data[0].encode("hex"), \
+                        data[1].encode("hex"), data[2:22].encode("hex"), \
+                        data[22:42].encode("hex"), data[42:48].encode("hex"),\
+                        data[48:54].encode("hex"), data[54:56].encode("hex")))
 
+                    if not CONFIG["on-demand_connection"]:
+                        continue
+                    if len(data) < 16:
+                        continue
+                    self.create_connection_req(data[2:])
+
+                else:
+                    logging.error("Unknown type message")
+                    logging.debug("{0}".format(data[0:].encode("hex")))
+                    sys.exit()
+
+            elif sock == self.cc_sock:
+                data, addr = sock.recvfrom(CONFIG["buf_size"])
+                logging.debug("ICC packet received from {0}".format(addr))
+                # For Francios ----------------------------------------
+                msg = ""
+                msg += null_uid
+                msg += null_uid
+                msg += mac_a2b(self.ipop_state["_mac"])
+                msg += data[6:12]
+                msg += data[12:]
+                send_packet(self.sock, data)
+                # ----------------------------------------For Francois
+                #self.icc_packet_handle(addr, data)
             else:
-                logging.error("Unknown type message")
-                logging.debug("{0}".format(data[0:].encode("hex")))
+                logging.error("Unknown type socket")
                 sys.exit()
-            
-    elif sock == self.cc_sock:
-        data, addr = sock.recvfrom(CONFIG["buf_size"])
-        logging.debug("ICC packet received from {0}".format(addr))
-        # For Francios ----------------------------------------
-        msg = ""
-        msg += null_uid
-        msg += null_uid
-        msg += mac_a2b(self.ipop_state["_mac"])
-        msg += data[6:12]
-        msg += data[12:]
-        send_packet(self.sock, data)
-        # ----------------------------------------For Francois
-        #self.icc_packet_handle(addr, data)
-    else:
-        logging.error("Unknown type socket")
-        sys.exit()
 
 def main():
     parse_config()
