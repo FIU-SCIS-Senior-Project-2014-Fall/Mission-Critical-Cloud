@@ -44,7 +44,7 @@ CONFIG = {
     "on-demand_inactive_timeout" : 600,
     "tincan_logging": 1,
     "controller_logging" : "INFO",
-    "icc" : False, # Inter-Controller Connection
+    "icc" : True, # Inter-Controller Connection
     "icc_port" : 30000,
     "switchmode" : 0,
     "trim_enabled": False,
