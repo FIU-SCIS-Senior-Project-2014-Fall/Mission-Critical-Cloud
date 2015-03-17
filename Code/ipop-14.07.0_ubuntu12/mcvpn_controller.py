@@ -447,7 +447,7 @@ class MCCVPNUdpServer(UdpServer):
                         dump(payload)
                         logging.debug("PAYLOAD = %s", mac_b2a(payload[:6]))
                         logging.debug("PAYLOAD = %s", mac_b2a(payload[6:12]))
-                        logging.debug("PAYLOAD = %s", mac_b2a(payload[12:]))
+                        logging.debug("PAYLOAD = %s", mac_b2a(payload[12:18]))
 
 
                         parsed_packet = self.parse(data)
