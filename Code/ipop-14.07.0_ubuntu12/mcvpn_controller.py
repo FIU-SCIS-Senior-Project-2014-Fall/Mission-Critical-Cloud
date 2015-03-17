@@ -183,7 +183,7 @@ class MCCVPNUdpServer(UdpServer):
             return parsed_packet
 
         else:
-            # logging.debug("Not an Ethernet Packet")
+            logging.debug("Not an Ethernet Packet")
             return None 
 
     
