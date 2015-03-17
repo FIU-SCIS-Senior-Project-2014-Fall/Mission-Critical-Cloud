@@ -440,7 +440,7 @@ class MCCVPNUdpServer(UdpServer):
 
 
                         dump(msg)
-                        logging.debug("MSG DEST %s", msg[:22]))
+                        logging.debug("MSG DEST %s", msg[:22])
                         
 
                         parsed_packet = self.parse(data)
