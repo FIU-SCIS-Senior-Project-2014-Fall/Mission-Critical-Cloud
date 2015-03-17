@@ -435,7 +435,7 @@ class MCCVPNUdpServer(UdpServer):
                         msg = data[2:]
 
                         logging.debug("LOCAL PACKET ADDR INFO %s", addr)
-                        parsed_packet = parse(data)
+                        parsed_packet = self.parse(data)
                         if(parsed_packet and parsed_packet['data'][0] not in control_packet_types):
                           if str(parsed_packet["source"]) == CONFIG['ip4']:
                             if CONFIG['mcc_type'] == 0:
