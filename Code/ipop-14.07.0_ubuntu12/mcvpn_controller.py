@@ -448,7 +448,7 @@ class MCCVPNUdpServer(UdpServer):
                         logging.debug("PAYLOAD = %s", mac_b2a(payload[:6]))
                         logging.debug("PAYLOAD = %s", mac_b2a(payload[6:12]))
                         logging.debug("PAYLOAD = %s", mac_b2a(payload[12:18]))
-
+                        logging.debug("PAYLOAD = %s", mac_b2a(payload[18:]))
 
                         parsed_packet = self.parse(data)
                         if(parsed_packet and parsed_packet['data'][0] not in control_packet_types):
