@@ -186,7 +186,7 @@ class MCCVPNUdpServer(UdpServer):
 
     
     def multicast(self, msg, dest):
-
+        logging.debug("Multicasting local packet")
         # Sanity Check
         if CONFIG['mcc_type'] == 1:
             logging.debug("MCC Type is not multicast; This should not happen")
@@ -446,6 +446,7 @@ class MCCVPNUdpServer(UdpServer):
                                 self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["data"])
                         # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
                         # send_packet_to_remote(self.cc_sock, msg, dest)
+                        logging.debug("CONTINUING")
                         continue
                     # ----------------------------------------For Francois----
 
