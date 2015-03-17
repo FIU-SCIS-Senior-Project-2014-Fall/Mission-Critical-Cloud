@@ -110,7 +110,7 @@ class MCCVPNUdpServer(UdpServer):
         self.ondemand_create_connection(uid, send_req=True)
 
 
-    def parse(packet):
+    def parse(self, packet):
       
         paresed_packet = {}
         packet, addr = packet
