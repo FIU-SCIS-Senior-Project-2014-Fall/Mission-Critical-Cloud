@@ -444,7 +444,7 @@ class MCCVPNUdpServer(UdpServer):
                         dump(msg)
                         dump(src)
                         dump(dest)
-                        dump(payload)
+                        pktdump(payload)
 
                         
 
