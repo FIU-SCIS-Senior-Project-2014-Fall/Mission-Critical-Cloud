@@ -21,11 +21,12 @@ from threading import Timer
 
 # Set default config values
 CONFIG = {
-    "stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
-             "stun2.l.google.com:19302", "stun3.l.google.com:19302",
-             "stun4.l.google.com:19302"],
+    "stun": ["131.94.128.21:3478"],
+    # "stun": ["stun.l.google.com:19302", "stun1.l.google.com:19302",
+    #          "stun2.l.google.com:19302", "stun3.l.google.com:19302",
+    #          "stun4.l.google.com:19302"],
     "turn": [],  # Contains dicts with "server", "user", "pass" keys
-    "ip4": "172.16.0.1",
+    "ip4": "",
     "localhost": "127.0.0.1",
     "ip6_prefix": "fd50:0dbc:41f2:4a3c",
     "localhost6": "::1",
@@ -56,7 +57,12 @@ CONFIG = {
     "multihop_sr": True, # Multihop source route
     "stat_report": False,
     "stat_server" : "metrics.ipop-project.org",
-    "stat_server_port" : 5000
+    "stat_server_port" : 5000,
+    "recalc_time": 30,
+    "min_latency": 0,
+    "max_latency": 1,
+    "mcc_type": 0, # 0 Specifies multi-cast, 1 specifies encapsulation
+    "mcc_forwards": 5 # number of random forwards for mcc_type 0
 }
 
 IP_MAP = {}
@@ -70,6 +76,10 @@ null_uid = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 null_uid += "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 bc_mac = "\xff\xff\xff\xff\xff\xff"
 null_mac = "\x00\x00\x00\x00\x00\x00"
+
+control_packet_types = { ipop_ver, tincan_control }
+
+HOP_COUNT = CONFIG['multihop_hl'] -  CONFIG['multihop_ihc']
 
 # PKTDUMP mode is for more detailed than debug logging, especially for dump
 # packet contents in hexadecimal to log

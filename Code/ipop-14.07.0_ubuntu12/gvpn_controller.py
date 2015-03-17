@@ -109,6 +109,225 @@ class GvpnUdpServer(UdpServer):
         logging.debug("idle_peers[uid] --- {0}".format(msg))
         self.ondemand_create_connection(uid, send_req=True)
 
+
+    def parse(packet):
+      
+        paresed_packet = {}
+        packet, addr = packet
+        data = packet
+
+        #parse ethernet header
+        eth_length = 14
+
+        eth_header = packet[:eth_length]
+        eth = unpack('!6s6sH' , eth_header)
+        eth_protocol = socket.ntohs(eth[2])
+
+        #Parse IP packets, IP Protocol number = 8
+        if eth_protocol == 8 :
+            #Parse IP header
+            #take first 20 characters for the ip header
+            ip_header = packet[eth_length:20+eth_length]
+
+            #now unpack them
+            iph = unpack('!BBHHHBBH4s4s' , ip_header)
+
+            version_ihl = iph[0]
+            version = version_ihl >> 4
+            ihl = version_ihl & 0xF
+
+            iph_length = ihl * 4
+
+            ttl = iph[5]
+            protocol = iph[6]
+            s_addr = socket.inet_ntoa(iph[8]);
+            d_addr = socket.inet_ntoa(iph[9]);
+
+            u = iph_length + eth_length
+            icmph_length = 4
+            icmp_header = packet[u:u+4]
+
+            #now unpack them
+            icmph = unpack('!BBH' , icmp_header)
+
+            icmp_type = icmph[0]
+            code = icmph[1]
+            checksum = icmph[2]
+
+            h_size = eth_length + iph_length + icmph_length
+            data_size = len(packet) - h_size
+            #get data from the packet
+            #data = packet[h_size:]
+
+
+            # build parsed_packet object
+            parsed_packet = {
+              "ip_header":ip_header
+              ,"ttl":ttl
+              ,"protocol":protocol
+              ,"source":s_addr
+              ,"dest":d_addr
+              ,"icmp_header":icmp_header
+              ,"icmp_type":icmp_type
+              ,"code":code
+              ,"checksum":checksum
+              ,"h_size":h_size
+              ,"data_size":data_size
+              ,"data":packet
+              ,"addr":addr
+            }
+            return parsed_packet
+
+        else:
+            # logging.debug("Not an Ethernet Packet")
+            return None 
+
+    
+    def multicast(self, msg, dest):
+
+        # Sanity Check
+        if CONFIG['mcc_type'] == 1:
+            logging.debug("MCC Type is not multicast; This should not happen")
+            logging.debug("Failure Exiting...")
+            sys.exit()
+
+        uid = gen_uid(dest)
+
+        for f in range(0, CONFIG['mcc_forwards']):
+            rand_dest = self.peers[random.sample(self.peers, 1)]
+                if rand_dest and self.peers[rand_dest]['status'] != offline:
+                    rand_dest_ip6  = rand_dest['ip6']
+                    logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
+                    send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
+
+        if uid in self.peers and self.peers[uid]['status'] != offline:
+            dest_ip6 = self.peers[uid]['ip6']
+            logging.debug("DEST = %s, DEST_IP6 = %s", dest, dest_ip6)
+            send_packet_to_remote(self.cc_sock, msg, dest_ip6)
+        # else:
+            # Do nothing
+
+
+    # Generates a new random path from the source (this vm) to the destination vm
+    # within the required latency bounds
+    #
+    # @param max The maximum allowed latency
+    # @param min The minimum allowed latency
+    # @param dest The destination vm
+    #
+    # @return the new path paths
+    
+    def find_path(self, max, min, dest):
+
+        # get required number of hops
+        hop_count = HOP_COUNT
+
+        # this line makes it so that our max hop count
+        # is no greater than the number of peers in our cloud.
+        if hop_count > len(self.peers):
+            hop_count = len(self.peers)
+
+        paths = []
+
+        guest_uid = gen_uid(dest)
+        logging.debug ("Self.Peers = %s", self.peers )
+        logging.debug ( "Self.Peerslist = %s", self.peerlist )
+
+        if hop_count == 0:
+            # make hop final destination
+            if dest in self.peers:
+              logging.debug("0 HOP - FOUND DEST IN PEERS LIST")
+              paths.append(self.peers[guest_uid]) # final dest
+              logging.debug( "PATHS = %s",  paths )
+              return paths
+            else:
+              return None
+
+        # NOTE: RANDOMIZATION ALGORITHM
+        # _______________________________________________________________________________________________________
+        # | Now the question becomes how many paths do we want to generate?                                      |
+        # | Ideally we would want to generate ALL possible paths present in our network from source              |
+        # | to destination. In order to do this we would need to introduce the incomplete gamma function         |
+        # | Let P_n (p sub n) be the total number of paths from source u to destination v and the remainder      |
+        # | of the graph be w. Then P_n = e(n-3)2G(n-3, 1)+n-2, where e is the base of the natural logarithm.    |
+        # |                                                                                                      |
+        # | This is all good, however the sequence explodes from after n = 7 i.e. 1, 3, 11, 49, 261, 1631, ...   |
+        # |                                                                    n=3^           n=7^               |
+        # | One would need to calculate the computational complexity of the random.sample function in Python to  |
+        # | determine the feasibility of the above approach. However this is beyond the scope of this project    |
+        # | therefore for the sake of simplicity we shall use 1 path of hop_count length.                        |
+        # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
+        # |______________________________________________________________________________________________________|
+
+
+        # add hop count random elements from peers set
+        # make hop_count random samples of length hop_count
+        # and append that set into paths.
+        # see above if hop_count is greater than peers
+        logging.debug("GUEST UID = %s", self.peers[guest_uid])
+
+        if guest_uid in self.peers and self.peers[guest_uid]['status'] == 'online':
+          for i in range(0, hop_count):
+              logging.debug("RANDOM SAMPLE = %s", random.sample(self.peers, hop_count))
+              paths.append(random.sample(self.peers, hop_count))
+
+        logging.debug( "PATHS = %s",  paths )
+
+        return paths
+
+
+    
+    # Wrapper for find_path. Fixes max and min latency vars.
+    # @returns a randomly chosen path.
+
+    def calc_route(self, source, dest):
+        # Check if able to calculate route by checking
+        # the status of the peerlist.
+        # if there is no viable connection to the dest
+        # by a peer than we cannot route the packet and 
+        # no route exists.
+        # if so return false
+        if len(self.peers) == 0 or len(self.peerlist) == 0:
+            logging.debug("No peers; cannot calculate route!")
+            # if route cannot be calculated 
+            # packet should not be changed
+            return False
+
+        # get some info from a future traffic function
+        latency = calc_latency()
+        if isinstance(CONFIG['min_latency'], int) and isinstance(CONFIG['max_latency'], int):
+            if CONFIG['min_latency'] > CONFIG['max_latency']:# error perhaps swap max and min values
+                max_latency = CONFIG['min_latency']
+                min_latency = CONFIG['max_latency']
+            else:
+                max_latency = CONFIG['max_latency']
+                min_latency = CONFIG['min_latency']
+        else: pass
+            # Raise error
+
+        # choose a random path from the peers set and return it
+        return self.find_path(max_latency, min_latency, dest)
+
+    def local_packet_handle(self, source, dest, packet):
+        route = self.calc_route(source, dest)
+        if not(route):
+            # no viable route to packet
+            # handle packet directly
+            # do nothing
+            return None
+
+        else:
+            logging.debug("route = %s", route)
+            if CONFIG['mcc_type'] == 0:
+                return self.multicast(packet)
+
+            packet = self.wrap(route, packet)
+            
+            make_remote_call(self.sock, d_addr, CONFIG['svpn_port'], tincan_packet, packet)
+            logging.debug( "Local Packet Route Calculated and Sent!" )
+
+        return
+
     def serve(self):
         socks, _, _ = select.select(self.sock_list, [], [], CONFIG["wait_time"])
         for sock in socks:
@@ -214,8 +433,17 @@ class GvpnUdpServer(UdpServer):
                         logging.debug("IPv4 Packet is forwarded")
                         dump(data)
                         msg = data[2:]
-                        dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
-                        send_packet_to_remote(self.cc_sock, msg, dest)
+
+                        logging.debug("LOCAL PACKET ADDR INFO %s", addr)
+                        parsed_packet = parse(data)
+                        if(parsed_packet and parsed_packet['data'][0] not in control_packet_types):
+                          if str(parsed_packet["source"]) == CONFIG['ip4']:
+                            if CONFIG['mcc_type'] == 0:
+                                self.multicast(msg, parsed_packet["dest"])
+                            else:
+                                self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["data"])
+                        # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
+                        # send_packet_to_remote(self.cc_sock, msg, dest)
                         continue
                     # ----------------------------------------For Francois----
 
