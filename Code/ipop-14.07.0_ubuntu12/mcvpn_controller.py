@@ -195,10 +195,10 @@ class MCCVPNUdpServer(UdpServer):
 
         for f in range(0, CONFIG['mcc_forwards']):
             rand_dest = self.peers[random.sample(self.peers, 1)]
-                if rand_dest and self.peers[rand_dest]['status'] != offline:
-                    rand_dest_ip6  = rand_dest['ip6']
-                    logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
-                    send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
+            if rand_dest and self.peers[rand_dest]['status'] != offline:
+                rand_dest_ip6  = rand_dest['ip6']
+                logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
+                send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
 
         if uid in self.peers and self.peers[uid]['status'] != offline:
             dest_ip6 = self.peers[uid]['ip6']
