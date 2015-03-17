@@ -438,8 +438,9 @@ class MCCVPNUdpServer(UdpServer):
                         dump(data)
                         msg = data[2:]
 
-                        dump(msg[22:42])
-                        logging.debug("MSG DEST %s", ip4_b2a(msg[22:42]))
+
+                        dump(msg)
+                        logging.debug("MSG DEST %s", msg[:22]))
                         
 
                         parsed_packet = self.parse(data)
