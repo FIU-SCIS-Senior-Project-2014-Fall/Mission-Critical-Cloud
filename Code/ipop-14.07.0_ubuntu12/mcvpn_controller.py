@@ -445,6 +445,7 @@ class MCCVPNUdpServer(UdpServer):
                         dump(src)
                         dump(dest)
                         dump(payload)
+                        logging.debug("PAYLOAD = %s", payload)
 
                         
 
