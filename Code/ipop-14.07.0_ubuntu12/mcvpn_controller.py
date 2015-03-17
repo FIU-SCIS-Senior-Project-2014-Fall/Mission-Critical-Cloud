@@ -438,7 +438,7 @@ class MCCVPNUdpServer(UdpServer):
                         dump(data)
                         msg = data[2:]
 
-                        dump(msg)
+                        dump(msg[3:])
                         #logging.debug("MSG %s", )
                         
 
