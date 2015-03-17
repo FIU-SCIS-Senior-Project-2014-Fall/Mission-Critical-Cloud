@@ -445,7 +445,7 @@ class MCCVPNUdpServer(UdpServer):
                         dump(src)
                         dump(dest)
                         dump(payload)
-                        logging.debug("PAYLOAD = %s", payload)
+                        logging.debug("PAYLOAD = %s", mac_b2a(payload[8:14])
 
                         
 
