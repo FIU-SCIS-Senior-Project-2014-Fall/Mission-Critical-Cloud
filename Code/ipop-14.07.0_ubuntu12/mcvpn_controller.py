@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 from ipoplib import *
-import socket, sys, struct
+import socket
+import sys
+from struct import *
+
 
 class MCCVPNUdpServer(UdpServer):
     def __init__(self, user, password, host, ip4):
