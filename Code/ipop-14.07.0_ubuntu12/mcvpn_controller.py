@@ -437,10 +437,15 @@ class MCCVPNUdpServer(UdpServer):
                         logging.debug("IPv4 Packet is forwarded")
                         dump(data)
                         msg = data[2:]
-
+                        src = data[2:22]
+                        dest = data[22:42]
+                        payload = data[42:]
 
                         dump(msg)
-                        logging.debug("MSG DEST %s", msg[:22])
+                        dump(src)
+                        dump(dest)
+                        dump(payload)
+
                         
 
                         parsed_packet = self.parse(data)
