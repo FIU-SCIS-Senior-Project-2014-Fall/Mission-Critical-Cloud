@@ -112,9 +112,8 @@ class MCCVPNUdpServer(UdpServer):
 
     def parse(self, packet):
       
-        paresed_packet = {}
-        packet, addr = packet
-        data = packet
+        parsed_packet = {}
+        data, addr = packet
 
         #parse ethernet header
         eth_length = 14
@@ -173,7 +172,7 @@ class MCCVPNUdpServer(UdpServer):
               ,"checksum":checksum
               ,"h_size":h_size
               ,"data_size":data_size
-              ,"data":packet
+              ,"data":data
               ,"addr":addr
             }
             return parsed_packet
