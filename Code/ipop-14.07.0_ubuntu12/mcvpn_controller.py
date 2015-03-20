@@ -453,11 +453,11 @@ class MCCVPNUdpServer(UdpServer):
                         dest = data[42:62]
                         payload = data[62:]
                        
-                        dump(msg)
-                        dump(src)
-                        dump(zeros)
-                        dump(dest)
-                        dump(payload)
+                        #dump(msg)
+                        #dump(src)
+                        #dump(zeros)
+                        #dump(dest)
+                        #dump(payload)
                         ####################
                     
                         if CONFIG['mcc_type'] == 0:
