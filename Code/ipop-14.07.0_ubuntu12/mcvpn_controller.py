@@ -189,6 +189,7 @@ class MCCVPNUdpServer(UdpServer):
     
     def multicast(self, msg, dest):
         logging.debug("Multicasting local packet")
+
         # Sanity Check
         if CONFIG['mcc_type'] == 1:
             logging.debug("MCC Type is not multicast; This should not happen")
@@ -200,16 +201,23 @@ class MCCVPNUdpServer(UdpServer):
         for f in range(0, CONFIG['mcc_forwards']):
             rand_dest = self.peers[random.sample(self.peers, 1)]
             if rand_dest and self.peers[rand_dest]['status'] != offline:
+
                 rand_dest_ip6  = rand_dest['ip6']
+
                 logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
+
                 send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
 
         if uid in self.peers and self.peers[uid]['status'] != offline:
+
             dest_ip6 = self.peers[uid]['ip6']
+
             logging.debug("DEST = %s, DEST_IP6 = %s", dest, dest_ip6)
+
+
             send_packet_to_remote(self.cc_sock, msg, dest_ip6)
-        # else:
-            # Do nothing
+
+        return
 
 
     # Generates a new random path from the source (this vm) to the destination vm
@@ -437,36 +445,27 @@ class MCCVPNUdpServer(UdpServer):
                         logging.debug("IPv4 Packet is forwarded")
                         dump(data)
                         msg = data[2:]
+
+                        # The following are subsets of msg #
                         src = data[2:22]
                         dest = data[22:42]
                         payload = data[42:]
-
+                       
                         dump(msg)
                         dump(src)
                         dump(dest)
                         dump(payload)
-                        logging.debug("PAYLOAD = %s", mac_b2a(payload[:6]))
-                        logging.debug("PAYLOAD = %s", mac_b2a(payload[6:12]))
-                        dump(payload[12:16])
-                        dump(payload[16:18])
-                        dump(payload[18:])
-
-                        parsed_packet = self.parse(data)
-                        if(parsed_packet and parsed_packet['data'][0] not in control_packet_types):
-                          if str(parsed_packet["source"]) == CONFIG['ip4']:
-                            if CONFIG['mcc_type'] == 0:
-                                self.multicast(msg, parsed_packet["dest"])
-                            else:
-                                self.local_packet_handle(parsed_packet["source"], parsed_packet["dest"], parsed_packet["data"])
+                        ####################
+                    
+                        if CONFIG['mcc_type'] == 0:
+                            self.multicast(msg, dest)
+                        else:
+                            self.local_packet_handle(src, dest, msg)
                         # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
                         # send_packet_to_remote(self.cc_sock, msg, dest)
                         logging.debug("CONTINUING")
                         continue
                     # ----------------------------------------For Francois----
-
-
-
-
 
                     # Ignore IPv6 packets for log readability. Most of them are
                     # Multicast DNS packets
