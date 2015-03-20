@@ -444,7 +444,7 @@ class MCCVPNUdpServer(UdpServer):
                     # --------------------------------------------------------
                     if data[54:56] == "\x08\x00":
                         logging.debug("IPv4 Packet is forwarded")
-                        dump(data)
+                        #dump(data)
                         msg = data[2:]
 
                         # The following are subsets of msg #
