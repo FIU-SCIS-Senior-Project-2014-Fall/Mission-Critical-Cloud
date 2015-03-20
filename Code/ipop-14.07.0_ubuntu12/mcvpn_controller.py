@@ -433,9 +433,10 @@ class MCCVPNUdpServer(UdpServer):
                 #|-------------------------------------------------------------|
                 #|      0       | ipop version                                 |
                 #|      1       | message type                                 |
-                #|      2       | source uid                                   |
-                #|     22       | destination uid                              |
-                #|     42       | Payload (Ethernet frame)                     |
+                #|      2:22    | source uid                                   |
+                #|      22:42   | all zeros                                    |
+                #|      42:62   | destination uid                              |
+                #|      62:     | Payload (Ethernet frame)                     |
                 #|-------------------------------------------------------------|
                 elif data[1] == tincan_packet:
  
@@ -448,11 +449,13 @@ class MCCVPNUdpServer(UdpServer):
 
                         # The following are subsets of msg #
                         src = data[2:22]
-                        dest = data[22:42]
-                        payload = data[42:]
+                        zeros = data[22:42]
+                        dest = data[42:62]
+                        payload = data[62:]
                        
                         dump(msg)
                         dump(src)
+                        dump(zeros)
                         dump(dest)
                         dump(payload)
                         ####################
