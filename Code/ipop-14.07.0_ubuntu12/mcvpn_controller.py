@@ -210,29 +210,22 @@ class MCCVPNUdpServer(UdpServer):
                 logging.debug(rand_dest)
             else:
                 logging.debug("Sample larger than population")
-                return
+                continue
             
             
             if rand_dest and rand_dest['status'] != 'offline':
-
                 rand_dest_ip6  = rand_dest['ip6']
-
-                logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
-
+                logging.debug("RAND_DEST_IP6 = %s", rand_dest_ip6)
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
                 logging.debug("ERROR %s", rand_dest)
-                return
+                continue
 
-        if uid in self.peers and self.peers[uid]['status'] != offline:
+        if uid in self.peers and self.peers[uid]['status'] != 'offline':
 
             dest_ip6 = self.peers[uid]['ip6']
-
             logging.debug("DEST = %s, DEST_IP6 = %s", dest, dest_ip6)
-
-
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
-
         return
 
         # END KWIAT'S ALGORITHM
