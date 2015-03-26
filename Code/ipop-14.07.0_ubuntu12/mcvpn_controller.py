@@ -187,8 +187,8 @@ class MCCVPNUdpServer(UdpServer):
             return None 
 
     
-    def multicast(self, msg, dest):
-        logging.debug("Multicasting local packet")
+    def forward(self, msg, dest):
+        logging.debug("Forwarding local packet")
 
         # Sanity Check
         if CONFIG['mcc_type'] == 1:
@@ -472,7 +472,7 @@ class MCCVPNUdpServer(UdpServer):
                         ####################
                     
                         if CONFIG['mcc_type'] == 0:
-                            self.multicast(msg, dest)
+                            self.forward(msg, dest)
                         else:
                             self.local_packet_handle(src, dest, msg)
                         # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
@@ -483,7 +483,7 @@ class MCCVPNUdpServer(UdpServer):
 
                     # Ignore IPv6 packets for log readability. Most of them are
                     # Multicast DNS packets
-                    if data[54:56] == "\x86\xdd":
+                    if data[74:76] == "\x86\xdd":
                         continue
                     logging.debug("IP packet forwarded \nversion:{0}\nmsg_type:"
                         "{1}\nsrc_uid:{2}\ndest_uid:{3}\nsrc_mac:{4}\ndst_mac:{"
