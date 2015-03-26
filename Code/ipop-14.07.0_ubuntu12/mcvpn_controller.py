@@ -199,9 +199,14 @@ class MCCVPNUdpServer(UdpServer):
         uid = gen_uid(dest)
 
         for f in range(0, CONFIG['mcc_forwards']):
-            logging.debug(random.sample(self.peers, 1))
+            if(len(self.peers) > 0):
+                logging.debug(random.sample(self.peers, 1))
+                #rand_dest = self.peers[]
+            else:
+                logging.debug("Sample larger than population")
+                return
             
-            #rand_dest = self.peers[]
+            
             if rand_dest and self.peers[rand_dest]['status'] != offline:
 
                 rand_dest_ip6  = rand_dest['ip6']
