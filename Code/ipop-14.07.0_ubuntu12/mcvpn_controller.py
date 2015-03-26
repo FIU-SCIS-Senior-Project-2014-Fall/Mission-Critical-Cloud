@@ -200,6 +200,8 @@ class MCCVPNUdpServer(UdpServer):
 
         rand_dest = None
 
+        # BEGIN KWIAT'S ALGORITHM
+
         for f in range(0, CONFIG['mcc_forwards']):
             if(len(self.peers) > 0):
                 res = random.sample(self.peers, 1)
@@ -211,13 +213,16 @@ class MCCVPNUdpServer(UdpServer):
                 return
             
             
-            if rand_dest and self.peers[rand_dest]['status'] != offline:
+            if rand_dest and rand_dest['status'] != offline:
 
                 rand_dest_ip6  = rand_dest['ip6']
 
                 logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
 
                 send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
+            else:
+                logging.debug("ERROR %s", rand_dest)
+                return
 
         if uid in self.peers and self.peers[uid]['status'] != offline:
 
@@ -229,6 +234,8 @@ class MCCVPNUdpServer(UdpServer):
             send_packet_to_remote(self.cc_sock, msg, dest_ip6)
 
         return
+
+        # END KWIAT'S ALGORITHM
 
 
     # Generates a new random path from the source (this vm) to the destination vm
