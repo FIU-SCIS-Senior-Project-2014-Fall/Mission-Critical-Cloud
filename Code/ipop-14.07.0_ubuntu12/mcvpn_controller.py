@@ -219,7 +219,7 @@ class MCCVPNUdpServer(UdpServer):
 
                 logging.debug("RAND_DEST = %s, RAND_DEST_IP6 = %s", rand_dest, rand_dest_ip6)
 
-                send_packet_to_remote(self.cc_sock, msg, rand_dest_ip6)
+                send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
                 logging.debug("ERROR %s", rand_dest)
                 return
@@ -231,7 +231,7 @@ class MCCVPNUdpServer(UdpServer):
             logging.debug("DEST = %s, DEST_IP6 = %s", dest, dest_ip6)
 
 
-            send_packet_to_remote(self.cc_sock, msg, dest_ip6)
+            send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
 
         return
 
