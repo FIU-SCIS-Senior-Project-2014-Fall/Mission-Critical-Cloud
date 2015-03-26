@@ -205,9 +205,9 @@ class MCCVPNUdpServer(UdpServer):
         for f in range(0, CONFIG['mcc_forwards']):
             if(len(self.peers) > 0):
                 res = random.sample(self.peers, 1)
-                logging.debug(res[0])
+                #logging.debug(res[0])
                 rand_dest = self.peers[res[0]]
-                logging.debug(rand_dest)
+                #logging.debug(rand_dest)
             else:
                 logging.debug("Sample larger than population")
                 continue
@@ -215,7 +215,7 @@ class MCCVPNUdpServer(UdpServer):
             
             if rand_dest and rand_dest['status'] != 'offline':
                 rand_dest_ip6  = rand_dest['ip6']
-                logging.debug("RAND_DEST_IP6 = %s", rand_dest_ip6)
+                logging.debug("RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip6, rand_dest['uid'])
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
                 logging.debug("ERROR %s", rand_dest)
@@ -224,7 +224,7 @@ class MCCVPNUdpServer(UdpServer):
         if uid in self.peers and self.peers[uid]['status'] != 'offline':
 
             dest_ip6 = self.peers[uid]['ip6']
-            logging.debug("DEST = %s, DEST_IP6 = %s", dest, dest_ip6)
+            logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
         return
 
