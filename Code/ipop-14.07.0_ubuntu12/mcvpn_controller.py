@@ -203,8 +203,8 @@ class MCCVPNUdpServer(UdpServer):
         for f in range(0, CONFIG['mcc_forwards']):
             if(len(self.peers) > 0):
                 res = random.sample(self.peers, 1)
-                logging.debug(res.value)
-                rand_dest = self.peers[res]
+                logging.debug(res)
+                rand_dest = self.peers[res[0]]
             else:
                 logging.debug("Sample larger than population")
                 return
