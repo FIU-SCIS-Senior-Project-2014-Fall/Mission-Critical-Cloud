@@ -213,7 +213,7 @@ class MCCVPNUdpServer(UdpServer):
                 return
             
             
-            if rand_dest and rand_dest['status'] != offline:
+            if rand_dest and rand_dest['status'] != 'offline':
 
                 rand_dest_ip6  = rand_dest['ip6']
 
