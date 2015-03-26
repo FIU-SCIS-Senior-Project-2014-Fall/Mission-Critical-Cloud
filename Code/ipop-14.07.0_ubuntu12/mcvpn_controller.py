@@ -442,7 +442,7 @@ class MCCVPNUdpServer(UdpServer):
  
                     # For Francois 
                     # --------------------------------------------------------
-                    if data[54:56] == "\x08\x00":
+                    if data[74:76] == "\x08\x00":
                         logging.debug("IPv4 Packet is forwarded")
                         #dump(data)
                         msg = data[2:]
