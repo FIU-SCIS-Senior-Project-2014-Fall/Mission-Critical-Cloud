@@ -205,6 +205,7 @@ class MCCVPNUdpServer(UdpServer):
                 res = random.sample(self.peers, 1)
                 logging.debug(res[0])
                 rand_dest = self.peers[res[0]]
+                logging.debug(rand_dest)
             else:
                 logging.debug("Sample larger than population")
                 return
