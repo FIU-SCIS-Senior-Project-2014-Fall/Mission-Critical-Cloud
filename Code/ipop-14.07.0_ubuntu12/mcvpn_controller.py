@@ -203,7 +203,7 @@ class MCCVPNUdpServer(UdpServer):
 
         # BEGIN KWIAT'S ALGORITHM
 
-        for f in range(0, CONFIG['mcc_forwards']):
+        for f in range(1, CONFIG['mcc_forwards']):
             if(len(self.peers) > 0):
                 res = random.sample(self.peers, 1)
                 #logging.debug(res[0])
