@@ -521,7 +521,7 @@ class MCCVPNUdpServer(UdpServer):
                 dest = data[40:60]
                 payload = data[60:]
                
-                dump(msgs[42:48])
+                dump(msgs[40:48])
                 dump(src)
                 dump(zeros)
                 dump(dest)
