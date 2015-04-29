@@ -512,29 +512,17 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[6:12] 
                 msg += data[12:]
 
-                #dump(data)
-                msgs = data
-
-                # The following are subsets of msg #
-                src = data[:20]
-                zeros = data[20:40]
-                dest = data[40:60]
-                payload = data[60:]
-               
-                dump(msgs[40:48])
-
-                # dump(CONFIG["ip6_prefix"])
                 dump(ip6_a2b(CONFIG["ip6_prefix"]))
-                dump(ip6_a2b(CONFIG["ip6_prefix"]) + msgs[40:48])
-                # dump(ip6_b2a(msgs[40:48]))
-                dump(src)
-                dump(zeros)
+                dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48])
                 dump(dest)
-                dump(payload)
+                dump(self.ipop_state("_ip6"))
+
 
                 logging.debug("MSG: %s", msg)
 
-                send_packet(self.sock, data)
+                if( ip6_b2a(dest) == self.ipop_state("_ip6") ):
+                    send_packet(self.sock, data)
+
                 
                 #self.icc_packet_handle(addr, data)
                 
