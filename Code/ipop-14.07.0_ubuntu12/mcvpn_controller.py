@@ -515,7 +515,7 @@ class MCCVPNUdpServer(UdpServer):
                 dump(ip6_a2b(CONFIG["ip6_prefix"]))
                 dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48]
                 dump(dest)
-                dump(self.ipop_state("_ip6"))
+                dump(self.ipop_state["_ip6"])
 
 
                 logging.debug("MSG: %s", msg)
