@@ -520,7 +520,7 @@ class MCCVPNUdpServer(UdpServer):
 
                 logging.debug("MSG: %s", msg)
 
-                if( ip6_b2a(dest) == self.ipop_state("_ip6") ):
+                if( ip6_b2a(dest) == self.ipop_state["_ip6"] ):
                     send_packet(self.sock, data)
 
                 
