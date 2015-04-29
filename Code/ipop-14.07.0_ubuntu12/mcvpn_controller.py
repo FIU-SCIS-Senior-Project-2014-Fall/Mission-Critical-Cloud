@@ -514,7 +514,7 @@ class MCCVPNUdpServer(UdpServer):
 
                 logging.debug("MSG: %s", msg)
 
-                self.send_packet(self.sock, data)
+                send_packet(self.sock, data)
                 
                 #self.icc_packet_handle(addr, data)
                 
