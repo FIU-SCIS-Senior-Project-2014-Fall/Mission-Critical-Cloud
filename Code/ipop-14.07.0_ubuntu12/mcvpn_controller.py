@@ -187,7 +187,7 @@ class MCCVPNUdpServer(UdpServer):
             return None 
 
     
-    def forward(self, msg, dest):
+    def forward(self, msg, dest, uid=None):
         logging.debug("Forwarding local packet")
 
         # Sanity Check
@@ -196,7 +196,8 @@ class MCCVPNUdpServer(UdpServer):
             logging.debug("Failure Exiting...")
             sys.exit()
 
-        uid = gen_uid(dest)
+        if(uid == None):
+            uid = gen_uid(dest)
 
         rand_dest = None
 
@@ -522,6 +523,7 @@ class MCCVPNUdpServer(UdpServer):
 
                 if( ip6_b2a(dest) == self.ipop_state["_ip6"] ):
                     send_packet(self.sock, data)
+                self.forward(msg, dest, uid=dest)
 
                 
                 #self.icc_packet_handle(addr, data)
