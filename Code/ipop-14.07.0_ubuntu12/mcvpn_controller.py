@@ -522,7 +522,10 @@ class MCCVPNUdpServer(UdpServer):
                 payload = data[60:]
                
                 dump(msgs[40:48])
-                dump(ip6_b2a(msgs[40:48]))
+
+                dump(CONFIG["ip6_prefix"])
+                dump(ip6_a2b(CONFIG["ip6_prefix"]))
+                # dump(ip6_b2a(msgs[40:48]))
                 dump(src)
                 dump(zeros)
                 dump(dest)
