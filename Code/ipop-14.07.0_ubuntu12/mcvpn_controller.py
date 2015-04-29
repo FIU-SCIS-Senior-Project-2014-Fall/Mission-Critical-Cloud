@@ -516,10 +516,10 @@ class MCCVPNUdpServer(UdpServer):
                 msgs = data
 
                 # The following are subsets of msg #
-                src = data[2:22]
-                zeros = data[22:42]
-                dest = data[42:62]
-                payload = data[62:]
+                src = data[:20]
+                zeros = data[20:40]
+                dest = data[40:60]
+                payload = data[60:]
                
                 dump(msgs)
                 dump(src)
