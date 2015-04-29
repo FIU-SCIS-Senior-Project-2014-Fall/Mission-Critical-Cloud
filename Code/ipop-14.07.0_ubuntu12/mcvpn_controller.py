@@ -513,7 +513,7 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[12:]
 
                 #dump(data)
-                msgs = data[2:]
+                msgs = data
 
                 # The following are subsets of msg #
                 src = data[2:22]
