@@ -54,8 +54,8 @@ def _run_cmd(s):
 			continue
 
 def main():	
-	_run_cmd("mcc")
-	_run_cmd("ejabberd")
+	#_run_cmd("mcc")
+	#_run_cmd("ejabberd")
 	_run_cmd("ejabberd_init")    
 
 if __name__ == "__main__":

@@ -451,7 +451,6 @@ class MCCVPNUdpServer(UdpServer):
                 #|-------------------------------------------------------------|
                 elif data[1] == tincan_packet:
  
-                    # For Francois 
                     # --------------------------------------------------------
                     if data[74:76] == "\x08\x00":
                         logging.debug("IPv4 Packet is forwarded")
@@ -479,7 +478,6 @@ class MCCVPNUdpServer(UdpServer):
                         # send_packet_to_remote(self.cc_sock, msg, dest)
                         logging.debug("CONTINUING")
                         continue
-                    # ----------------------------------------For Francois----
 
                     # Ignore IPv6 packets for log readability. Most of them are
                     # Multicast DNS packets
@@ -506,7 +504,7 @@ class MCCVPNUdpServer(UdpServer):
             elif sock == self.cc_sock:
                 data, addr = sock.recvfrom(CONFIG["buf_size"])
                 logging.debug("ICC packet received from {0}".format(addr))
-                # For Francios  ----------------------------------------
+                
                 msg = ""
                 msg += null_uid
                 msg += null_uid
@@ -514,8 +512,10 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[6:12] 
                 msg += data[12:]
 
-                send_packet(self.sock, data)
-                # ----------------------------------------For Francois
+                logging.debug("MSG: %s", msg)
+
+                self.send_packet(self.sock, data)
+                
                 #self.icc_packet_handle(addr, data)
                 
             else:

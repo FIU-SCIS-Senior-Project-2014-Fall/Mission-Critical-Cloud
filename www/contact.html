@@ -17,7 +17,7 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
-    <title>MC^2: P2P Based Masquerading for Mission Critical Clouds</title>
+    <title>MC2: A peer to peer virtual private overlay network for Mission Critical Clouds</h1></title>
 
     <!-- Bootstrap core CSS -->
     <link href="../../dist/css/bootstrap.min.css" rel="stylesheet">
@@ -35,7 +35,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     
-    <link rel="stylesheet" href="bower_components/BigVideo/css/bigvideo.css">
+    <link rel="stylesheet" href="bower_components/BigVideo.js/css/bigvideo.css">
   </head>
 
   <body>
@@ -60,9 +60,10 @@
           </div>
 
           <div class="inner cover">
-            <h1 class="cover-heading">Contact MC<sup>2</sup></h1>
+            <p class="lead"><h1 class="cover-heading">Contact MC<sup>2</sup></h1></p>
+            <p class="lead"> <a href="https://www.linkedin.com/in/mzhao">Ming Zhao PhD</a></p>
             <p class="lead"> <a href="https://www.linkedin.com/pub/francois-d-ugard/16/499/901">Francois D'Ugard</a></p>
-            <p class="lead"> <a href="visa.cis.fiu.edu/">VISA Lab @ FIU</a></p>
+            <p class="lead"> <a href="http://visa.cis.fiu.edu/">V.I.S.A. Laboratory, Florida International University, Miami, FL</a></p>
             <p class="lead">
               <a href="https://github.com/FIU-SCIS-Senior-Project-2014-Fall/Mission-Critical-Cloud" class="btn btn-lg btn-default">GitHub</a>
             </p>
@@ -79,34 +80,32 @@
       </div>
 
     </div>
+      <!-- Bootstrap core JavaScript ================================================== -->
+      <!-- Placed at the end of the document so the pages load faster -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+      <script src="./bower_components/jquery/dist/js/bootstrap.min.js"></script>
+      <script src="../../assets/js/docs.min.js.js"></script>
+      <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+      <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
 
-        <!-- Bootstrap core JavaScript
-        ================================================== -->
-        <!-- Placed at the end of the document so the pages load faster -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="../../dist/js/bootstrap.min.js"></script>
-        <script src="../../assets/js/docs.min.js"></script>
-        <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-        <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
-
-    </body>
+  </body>
     
     <!-- BigVideo Dependencies -->
-    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="./bower_components/jquery/dist/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="bower_components/jquery/dist/jquery.min.js"><\/script>')</script>
-    <script src="bower_components/jquery-ui/jquery-ui.js"></script>
-    <script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
-    <script src="bower_components/video.js/dist/video-js/video.js"></script>
+    <script src="./bower_components/jquery-ui/jquery-ui.js"></script>
+    <script src="./bower_components/jquery-ui/jquery-ui.min.js"></script>
+    <script src="./bower_components/video.js/dist/video-js/video.js"></script>
 
     <!-- BigVideo -->
-    <script src="bower_components/BigVideo/lib/bigvideo.js"></script>
+    <script src="./bower_components/BigVideo.js/lib/bigvideo.js"></script>
 
     <!-- Demo -->
     <script>
       $(function() {
-          var BV = new $.BigVideo();
-          BV.init();
-          BV.show('vids/cloud_0.mp4',{ambient:true});
+        var BV = new $.BigVideo();
+        BV.init();
+        BV.show('https://avvimeo-a.akamaihd.net/70988/013/51941054.mp4?token2=1429857311_62d76d5413875e697e8011a16d64e456&aksessionid=5b618d9569a43893',{ambient:true});    
       });
     </script>
 </html>

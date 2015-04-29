@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
     
     <!-- Bootstrap -->
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -20,10 +19,10 @@
     <![endif]-->
     
 
-    <title>MC2: P2P Based Masquerading for Mission Critical Clouds</h1></title>
+    <title>MC2: A peer to peer virtual private overlay network for Mission Critical Clouds</h1></title>
 
     <!-- Bootstrap core CSS -->
-    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="./css/cover.css" rel="stylesheet"> 
@@ -33,15 +32,17 @@
     <!--<script src="../../assets/js/ie-emulation-modes-warning.js"></script>-->
     
     <!--BigVideo-->
-    <link rel="stylesheet" href="bower_components/BigVideo/css/bigvideo.css">
+    <link rel="stylesheet" href="./bower_components/BigVideo.js/css/bigvideo.css">
     
   </head>
 
   <body>
     <div class="site-wrapper">
+
       <div class="site-wrapper-inner">
 
         <div class="cover-container">
+
           <div class="masthead clearfix">
             <div class="inner">
               <h3 class="masthead-brand">MC<sup>2</sup></h3>
@@ -61,7 +62,7 @@
           
             <h1 class="cover-heading">MC<sup>2</sup></h1>
             
-            <p class="lead">P2P Based Network Masquerading for Mission Critical Clouds</p>
+            <p class="lead">A peer to peer virtual private overlay network for Mission Critical Clouds</p>
             
             <p class="lead">
               <a href="what.html" class="btn btn-lg btn-default">Learn more</a>
@@ -74,10 +75,12 @@
         <div class="mastfoot">
         
           <div class="inner">
-            <p>
-              <a href="visa.cis.fiu.edu">VISA Lab @ FIU </a> | 
-              <a href="mailto:fdugard002@fiu.edu">Francois D'Ugard</a> |
-              <a href="mailto:ming@cis.fiu.edu">Ming Zhao, PhD.</a>
+            <p align="center">
+              <a href="mailto:fdugard002@fiu.edu">Francois D'Ugard</a>    |   
+              <a href="mailto:ming@cis.fiu.edu">Ming Zhao, PhD.</a> 
+            </p>
+            <p align="center">
+              <a href="http://visa.cis.fiu.edu/">V.I.S.A. Laboratory, Florida International University, Miami, FL</a>
             </p>
           </div>
           
@@ -86,33 +89,29 @@
       </div>
 
     </div>
-      <!-- Bootstrap core JavaScript
-      ================================================== -->
+      <!-- Bootstrap core JavaScript ================================================== -->
       <!-- Placed at the end of the document so the pages load faster -->
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-      <script src="../../dist/js/bootstrap.min.js"></script>
-      <script src="../../assets/js/docs.min.js"></script>
-      <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-      <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+      <script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
-    </body>
+  </body>
     
     <!-- BigVideo Dependencies -->
-    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="./bower_components/jquery/dist/jquery.min.js"></script>
     <script>window.jQuery || document.write('<script src="bower_components/jquery/dist/jquery.min.js"><\/script>')</script>
-    <script src="bower_components/jquery-ui/jquery-ui.js"></script>
-    <script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
-    <script src="bower_components/video.js/dist/video-js/video.js"></script>
+    <script src="./bower_components/jquery-ui/jquery-ui.js"></script>
+    <script src="./bower_components/jquery-ui/jquery-ui.min.js"></script>
+    <script src="./bower_components/video.js/dist/video-js/video.js"></script>
 
     <!-- BigVideo -->
-    <script src="bower_components/BigVideo/lib/bigvideo.js"></script>
+    <script src="./bower_components/BigVideo.js/lib/bigvideo.js"></script>
 
     <!-- Demo -->
     <script>
       $(function() {
-          var BV = new $.BigVideo();
-          BV.init();
-          BV.show('vids/cloud_0.mp4',{ambient:true});
+		    var BV = new $.BigVideo();
+		    BV.init();
+		    BV.show('https://player.vimeo.com/video/20211531#t=17s/config',{ambient:false});		
       });
     </script>
 </html>

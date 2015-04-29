@@ -17,5 +17,10 @@ fi
 HM=$(awk -F: -v v="$U" '{ if ($1==v) print $6}' /etc/passwd)
 echo "$U's home dir = $HM"
 
-sudo su - hduser && ssh-keygen -t rsa -P "" -f $HM/.ssh/id_rsa && cat $HM/.ssh/id_rsa.pub >> $HM/.ssh/authorized_keys
+sudo su - hduser 
+ssh-keygen -t rsa -P "" -f $HOME/.ssh/id_rsa 
+cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 ssh localhost
+
+
+ssh-copy-id -i $HOME/.ssh/id_rsa.pub hduser@slave
