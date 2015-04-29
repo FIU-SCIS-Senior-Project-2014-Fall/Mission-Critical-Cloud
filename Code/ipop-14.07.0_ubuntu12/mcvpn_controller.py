@@ -512,6 +512,21 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[6:12] 
                 msg += data[12:]
 
+                #dump(data)
+                msgs = data[2:]
+
+                # The following are subsets of msg #
+                src = data[2:22]
+                zeros = data[22:42]
+                dest = data[42:62]
+                payload = data[62:]
+               
+                dump(msgs)
+                dump(src)
+                dump(zeros)
+                dump(dest)
+                dump(payload)
+
                 logging.debug("MSG: %s", msg)
 
                 send_packet(self.sock, data)
