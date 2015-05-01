@@ -514,13 +514,13 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[6:12] 
                 msg += data[12:]
 
-                dump(ip6_a2b(CONFIG["ip6_prefix"]))
-                dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48]
-                dump(dest)
-                dump(self.ipop_state["_ip6"])
+                #dump(ip6_a2b(CONFIG["ip6_prefix"]))
+                #dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48]
+                #dump(dest)
+                #dump(self.ipop_state["_ip6"])
 
 
-                logging.debug("MSG: %s", msg)
+                #logging.debug("MSG: %s", msg)
 
                 # if( ip6_b2a(dest) == self.ipop_state["_ip6"] ):
                 send_packet(self.sock, data)
