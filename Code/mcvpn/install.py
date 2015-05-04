@@ -8,6 +8,10 @@ import json
 import subprocess
 import uuid
 
+# Installs and sets up ejabberd XMPP service on dedicated server
+# Note: this can be one of your virtual machines. however best 
+# performance is achieved if this is run on a separate server
+# or the virtual machine host.
 
 install =	{
 		"ejabberd":
@@ -54,8 +58,8 @@ def _run_cmd(s):
 			continue
 
 def main():	
-	#_run_cmd("mcc")
-	#_run_cmd("ejabberd")
+	_run_cmd("mcc")
+	_run_cmd("ejabberd")
 	_run_cmd("ejabberd_init")    
 
 if __name__ == "__main__":
