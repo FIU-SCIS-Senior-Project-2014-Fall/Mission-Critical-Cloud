@@ -472,8 +472,8 @@ class MCCVPNUdpServer(UdpServer):
                         ####################
                     
                         if CONFIG['mcc_type'] == 0:
-                            dump("Test")
-                            #self.forward(msg, dest)
+                            #dump("Test")
+                            self.forward(msg, dest)
                         else:
                             self.local_packet_handle(src, dest, msg)
                         # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
