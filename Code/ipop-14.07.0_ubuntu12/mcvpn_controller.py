@@ -216,7 +216,7 @@ class MCCVPNUdpServer(UdpServer):
             
             if rand_dest and rand_dest['status'] != 'offline':
                 rand_dest_ip6  = rand_dest['ip6']
-                # logging.debug("RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip6, rand_dest['uid'])
+                logging.debug("RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip6, rand_dest['uid'])
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
                 logging.debug("ERROR %s", rand_dest)
@@ -225,8 +225,12 @@ class MCCVPNUdpServer(UdpServer):
         if uid in self.peers and self.peers[uid]['status'] != 'offline':
 
             dest_ip6 = self.peers[uid]['ip6']
-            # logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
+            logging.debug("Sending packet to remote peer")
+            logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
+        else
+             logging.debug("Error: destination offline")
+
         return
 
         # END KWIAT'S ALGORITHM
@@ -515,15 +519,15 @@ class MCCVPNUdpServer(UdpServer):
                 msg += data[12:]
 
                 #dump(ip6_a2b(CONFIG["ip6_prefix"]))
-                #dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48]
+                dest = ip6_a2b(CONFIG["ip6_prefix"]) + data[40:48]
                 #dump(dest)
                 #dump(self.ipop_state["_ip6"])
 
 
-                #logging.debug("MSG: %s", msg)
+                logging.debug("MSG: %s", msg)
 
                 # if( ip6_b2a(dest) == self.ipop_state["_ip6"] ):
-                send_packet(self.sock, data)
+                self.send_packet(self.sock, data)
                 # self.forward(msg, dest, uid=dest)
                 #self.icc_packet_handle(addr, data)
                 

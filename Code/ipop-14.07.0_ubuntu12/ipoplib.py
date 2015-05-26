@@ -39,7 +39,7 @@ CONFIG = {
     "uid_size": 40,
     "sec": True,
     "wait_time": 15,
-    "buf_size": 65565,
+    "buf_size": 65507,
     "router_mode": False,
     "on-demand_connection" : False,
     "on-demand_inactive_timeout" : 600,
