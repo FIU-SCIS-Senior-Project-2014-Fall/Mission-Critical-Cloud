@@ -228,7 +228,7 @@ class MCCVPNUdpServer(UdpServer):
             logging.debug("Sending packet to remote peer")
             logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
-        else
+        else:
              logging.debug("Error: destination offline")
 
         return
