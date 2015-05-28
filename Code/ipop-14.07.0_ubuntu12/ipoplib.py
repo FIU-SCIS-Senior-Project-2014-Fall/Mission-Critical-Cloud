@@ -172,7 +172,7 @@ def uid_b2a(msg):
         hext += ""
         if i % 16 == 14:
             hext += ""
-    logging.debug(hext)
+    return hext
 
 def gen_ip4(uid, peer_map, ip4=None):
     ip4 = ip4 or CONFIG["ip4"]
