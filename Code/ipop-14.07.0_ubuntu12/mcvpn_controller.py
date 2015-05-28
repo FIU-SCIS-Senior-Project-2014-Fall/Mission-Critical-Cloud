@@ -197,7 +197,7 @@ class MCCVPNUdpServer(UdpServer):
             sys.exit()
 
         if(uid == None):
-            uid = uid_a2b(dest)
+            uid = uid_b2a(dest)
             logging.debug("DEST %s UID=%s", dest, uid)
 
         rand_dest = None
