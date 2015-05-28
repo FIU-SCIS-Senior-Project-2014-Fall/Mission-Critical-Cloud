@@ -198,7 +198,7 @@ class MCCVPNUdpServer(UdpServer):
 
         if(uid == None):
             uid = gen_uid(dest)
-            logging.debug("UID=%s", uid)
+            logging.debug("DEST %s UID=%s", dest, uid)
 
         rand_dest = None
 
@@ -223,7 +223,7 @@ class MCCVPNUdpServer(UdpServer):
                 logging.debug("RAND_DEST_IP4 = %s RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip4, rand_dest_ip6, rand_dest['uid'])
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
-                logging.debug("ERROR %s", rand_dest)
+                logging.debug("ERROR OFFLINE %s", rand_dest)
                 continue
 
         #SEND TO ORIGINAL DESTINATION
