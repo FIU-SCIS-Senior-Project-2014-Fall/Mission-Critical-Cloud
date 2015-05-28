@@ -62,7 +62,7 @@ CONFIG = {
     "min_latency": 0,
     "max_latency": 100,
     "mcc_type": 0, # 0 Specifies multi-cast, 1 specifies encapsulation
-    "mcc_forwards": 5 # number of random forwards for mcc_type 0
+    "mcc_forwards": 2 # number of random forwards for mcc_type 0
 }
 
 IP_MAP = {}

@@ -201,6 +201,8 @@ class MCCVPNUdpServer(UdpServer):
 
         rand_dest = None
 
+        logging.debug("mcc_forwards= %s", CONFIG['mcc_forwards'])
+
         # BEGIN KWIAT'S ALGORITHM
 
         for f in range(0, CONFIG['mcc_forwards']):
