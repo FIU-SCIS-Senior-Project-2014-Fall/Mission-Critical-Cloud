@@ -220,7 +220,7 @@ class MCCVPNUdpServer(UdpServer):
             if rand_dest and rand_dest['status'] == 'online':
                 rand_dest_ip4  = rand_dest['ip4']
                 rand_dest_ip6  = rand_dest['ip6']
-                logging.debug("RAND_DEST_IP4 = %s RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip4, rand_dest_ip6, rand_dest['uid'])
+                #logging.debug("RAND_DEST_IP4 = %s RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip4, rand_dest_ip6, rand_dest['uid'])
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
             else:
                 logging.debug("ERROR OFFLINE %s", rand_dest)
