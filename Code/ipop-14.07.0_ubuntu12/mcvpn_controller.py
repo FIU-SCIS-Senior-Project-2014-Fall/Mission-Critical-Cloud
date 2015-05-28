@@ -210,12 +210,12 @@ class MCCVPNUdpServer(UdpServer):
                 res = random.sample(self.peers, 1)
                 #logging.debug(res[0])
                 rand_dest = self.peers[res[0]]
-                #logging.debug(rand_dest)
+                logging.debug("RANDOM DESTINATION!!! %s", rand_dest)
             else:
                 logging.debug("Sample larger than population")
                 continue
             
-            
+
             if rand_dest and rand_dest['status'] != 'offline':
                 rand_dest_ip4  = rand_dest['ip4']
                 rand_dest_ip6  = rand_dest['ip6']
