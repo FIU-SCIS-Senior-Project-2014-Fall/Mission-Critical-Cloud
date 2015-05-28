@@ -165,8 +165,14 @@ def mac_b2a(bin_mac):
 def uid_a2b(str_uid):
     return str_uid.decode("hex")
 
-def uid_b2a(bin_uid):
-    return "".join(bin_uid[x].encode("hex") for x in range(0,4))
+def uid_b2a(msg):
+    hext = ""
+    for i in range(0, len(msg),2):
+        hext += msg[i:i+2].encode("hex")
+        hext += ""
+        if i % 16 == 14:
+            hext += ""
+    logging.debug(hext)
 
 def gen_ip4(uid, peer_map, ip4=None):
     ip4 = ip4 or CONFIG["ip4"]
