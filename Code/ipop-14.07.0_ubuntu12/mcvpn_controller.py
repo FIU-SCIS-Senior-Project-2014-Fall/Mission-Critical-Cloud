@@ -198,6 +198,7 @@ class MCCVPNUdpServer(UdpServer):
 
         if(uid == None):
             uid = gen_uid(dest)
+            logging.debug("UID=%s", uid)
 
         rand_dest = None
 
