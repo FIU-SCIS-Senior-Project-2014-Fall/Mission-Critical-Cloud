@@ -226,7 +226,7 @@ class MCCVPNUdpServer(UdpServer):
                 logging.debug("ERROR %s", rand_dest)
                 continue
 
-        if uid in self.peers and self.peers[uid]['status'] != 'offline':
+        if self.peers[uid]['status'] == 'online':
 
             dest_ip6 = self.peers[uid]['ip6']
             logging.debug("Sending packet to remote peer")
