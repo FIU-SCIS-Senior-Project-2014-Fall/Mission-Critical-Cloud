@@ -199,8 +199,6 @@ class MCCVPNUdpServer(UdpServer):
         if(uid == None):
             uid = gen_uid(dest)
             logging.debug("UID=%s", uid)
-            uid2 = gen_uid(dest)
-            logging.debug("UID=%s", uid2)
 
         rand_dest = None
 
@@ -214,13 +212,13 @@ class MCCVPNUdpServer(UdpServer):
                 logging.debug("res[0]= ", res[0])
                 rand_dest = self.peers[res[0]]
                 logging.debug("RANDOM DESTINATION!!! %s", rand_dest['status'])
-                logging.debug(uid in self.peers)
+                logging.debug(self.peers[uid])
             else:
                 logging.debug("Sample larger than population")
                 continue
             
 
-            if rand_dest and rand_dest['status'] != 'offline':
+            if rand_dest and rand_dest['status'] == 'online':
                 rand_dest_ip4  = rand_dest['ip4']
                 rand_dest_ip6  = rand_dest['ip6']
                 logging.debug("RAND_DEST_IP4 = %s RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip4, rand_dest_ip6, rand_dest['uid'])
@@ -230,7 +228,6 @@ class MCCVPNUdpServer(UdpServer):
                 continue
 
         if self.peers[uid]['status'] == 'online':
-
             dest_ip6 = self.peers[uid]['ip6']
             logging.debug("Sending packet to remote peer")
             logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
