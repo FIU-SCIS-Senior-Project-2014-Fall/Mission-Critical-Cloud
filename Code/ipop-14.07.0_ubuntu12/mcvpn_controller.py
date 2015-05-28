@@ -227,9 +227,10 @@ class MCCVPNUdpServer(UdpServer):
                 continue
 
         #SEND TO ORIGINAL DESTINATION
+        logging.debug("Sending packet to remote peer")
+        logging.debug("Self.peers %s", self.peers)
         if uid in self.peers and self.peers[uid]['status'] == 'online':
             dest_ip6 = self.peers[uid]['ip6']
-            logging.debug("Sending packet to remote peer")
             logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
         else:
