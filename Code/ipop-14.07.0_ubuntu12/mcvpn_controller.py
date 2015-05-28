@@ -211,6 +211,7 @@ class MCCVPNUdpServer(UdpServer):
                 #logging.debug(res[0])
                 rand_dest = self.peers[res[0]]
                 logging.debug("RANDOM DESTINATION!!! %s", rand_dest)
+                logging.debug(uid in self.peers)
             else:
                 logging.debug("Sample larger than population")
                 continue
