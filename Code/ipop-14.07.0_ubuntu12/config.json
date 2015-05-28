@@ -5,5 +5,7 @@
     "ip4": "172.31.0.2",
     "ip4_mask": 24,
     "tincan_logging": 0,
-    "controller_logging": "DEBUG"
+    "controller_logging": "DEBUG",
+    "mcc_type": 0,
+    "mcc_forwards": 5
 }

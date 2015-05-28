@@ -60,7 +60,7 @@ CONFIG = {
     "stat_server_port" : 5000,
     "recalc_time": 30,
     "min_latency": 0,
-    "max_latency": 2,
+    "max_latency": 100,
     "mcc_type": 0, # 0 Specifies multi-cast, 1 specifies encapsulation
     "mcc_forwards": 5 # number of random forwards for mcc_type 0
 }
