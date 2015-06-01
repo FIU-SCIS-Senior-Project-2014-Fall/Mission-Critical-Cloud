@@ -221,7 +221,12 @@ class MCCVPNUdpServer(UdpServer):
                 rand_dest_ip4  = rand_dest['ip4']
                 rand_dest_ip6  = rand_dest['ip6']
                 #logging.debug("RAND_DEST_IP4 = %s RAND_DEST_IP6 = %s RAND_DEST_UID %s", rand_dest_ip4, rand_dest_ip6, rand_dest['uid'])
+
+                # This will create a connection between this node and the randomly selected node
+                self.ondemand_create_connection(rand_dest['uid'], send_req=True)
+
                 send_packet_to_remote(self.cc_sock, msg, (rand_dest_ip6, 30000))
+                
             else:
                 logging.debug("ERROR OFFLINE %s", rand_dest)
                 continue
@@ -232,7 +237,12 @@ class MCCVPNUdpServer(UdpServer):
         if uid in self.peers and self.peers[uid]['status'] == 'online':
             dest_ip6 = self.peers[uid]['ip6']
             logging.debug("DEST_IP6 = %s DEST_UID = %s", dest_ip6, uid)
+
+            # This will create a connection between this node and the randomly selected node
+            self.ondemand_create_connection(uid, send_req=True)
+
             send_packet_to_remote(self.cc_sock, msg, (dest_ip6, 30000))
+
         else:
              logging.debug("Error: destination offline")
 
@@ -276,23 +286,6 @@ class MCCVPNUdpServer(UdpServer):
             else:
               return None
 
-        # NOTE: RANDOMIZATION ALGORITHM
-        # _______________________________________________________________________________________________________
-        # | Now the question becomes how many paths do we want to generate?                                      |
-        # | Ideally we would want to generate ALL possible paths present in our network from source              |
-        # | to destination. In order to do this we would need to introduce the incomplete gamma function         |
-        # | Let P_n (p sub n) be the total number of paths from source u to destination v and the remainder      |
-        # | of the graph be w. Then P_n = e(n-3)2G(n-3, 1)+n-2, where e is the base of the natural logarithm.    |
-        # |                                                                                                      |
-        # | This is all good, however the sequence explodes from after n = 7 i.e. 1, 3, 11, 49, 261, 1631, ...   |
-        # |                                                                    n=3^           n=7^               |
-        # | One would need to calculate the computational complexity of the random.sample function in Python to  |
-        # | determine the feasibility of the above approach. However this is beyond the scope of this project    |
-        # | therefore for the sake of simplicity we shall use 1 path of hop_count length.                        |
-        # | The feasibility study and implementation of the aforementioned algorithm shall be future work.       |
-        # |______________________________________________________________________________________________________|
-
-
         # add hop count random elements from peers set
         # make hop_count random samples of length hop_count
         # and append that set into paths.
@@ -307,7 +300,6 @@ class MCCVPNUdpServer(UdpServer):
         logging.debug( "PATHS = %s",  paths )
 
         return paths
-
 
     
     # Wrapper for find_path. Fixes max and min latency vars.
@@ -484,6 +476,7 @@ class MCCVPNUdpServer(UdpServer):
                             #dump("Test")
                             self.forward(msg, dest)
                         else:
+                            # self.create_connection_req(data[2:])
                             self.local_packet_handle(src, dest, msg)
                         # dest = ("fd50:0dbc:41f2:4a3c:477c:cb36:7fd5:104c", 30000)
                         # send_packet_to_remote(self.cc_sock, msg, dest)

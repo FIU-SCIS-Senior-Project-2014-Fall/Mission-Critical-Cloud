@@ -48,7 +48,7 @@ CONFIG = {
     "icc" : True, # Inter-Controller Connection
     "icc_port" : 30000,
     "switchmode" : 0,
-    "trim_enabled": False,
+    "trim_enabled": True,
     "multihop": False,
     "multihop_cl": 100, #Multihop connection count limit
     "multihop_ihc": 3, #Multihop initial hop count
